@@ -1,0 +1,2 @@
+CREATE INDEX "accounts_name_prefix_idx" ON "accounts" USING btree (lower("game_name") text_pattern_ops);--> statement-breakpoint
+CREATE INDEX "match_participants_name_prefix_idx" ON "match_participants" USING btree (lower("riot_id_game_name") text_pattern_ops);
