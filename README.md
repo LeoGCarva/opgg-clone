@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# opgg clone
 
-## Getting Started
+Clone de estudo do op.gg / u.gg: perfil de jogadores, campeões mais jogados e estatísticas
+globais de campeões (tier list, builds, runas, counters) a partir da API da Riot.
 
-First, run the development server:
+Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind v4 · Drizzle + Postgres (Neon) · Vitest.
+
+## Configuração
+
+1. `pnpm install`
+2. Copie `.env.example` para `.env` e preencha `DATABASE_URL` (Neon, string *pooled*) e
+   `RIOT_API_KEY` ([developer.riotgames.com](https://developer.riotgames.com) — a chave de
+   desenvolvimento expira a cada 24h).
+3. `pnpm db:migrate`
+4. `pnpm dev` → http://localhost:3000
+
+## Como os dados entram
+
+| Origem | Quando | O que grava |
+|---|---|---|
+| **Perfil** (`/lol/br/Nome-TAG`) | 1ª visita, botão *Atualizar* (cooldown 2 min), *Carregar mais* | conta, elo, partidas do jogador |
+| **Coletor** (`pnpm collect`) | processo separado, em loop | partidas Solo/Duo do patch atual **com timeline**, por elo |
+| **Agregador** (`pnpm aggregate`) | a cada 30 min dentro do coletor, ou manual | tabelas `champion_*` usadas pela tier list |
+
+### Coletor
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm collect            # BR, até Ctrl+C
+pnpm collect br 10      # para sozinho depois de 10 minutos
+pnpm aggregate          # recalcula as estatísticas do patch mais recente coletado
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Sementes: ligas Challenger/Grão-Mestre/Mestre (bracket `master_plus`), Diamante I–IV e
+  Esmeralda I–II. Alterna um jogador de cada bracket por vez.
+- Cada partida custa 2 requisições (partida + timeline). Com a chave de desenvolvimento
+  (100 req / 2 min) isso dá ~25 partidas/min — o suficiente para estudar; uma tier list
+  confiável precisa de dezenas de milhares de partidas (chave de produção).
+- O coletor e o site usam limitadores separados; rodando os dois ao mesmo tempo a Riot
+  pode responder 429, que o cliente trata esperando o `Retry-After`.
+- A tier list e as páginas de campeão leem com cache de ~1 min; depois de agregar, os dados
+  novos aparecem em seguida.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| | |
+|---|---|
+| `pnpm dev` / `build` / `start` | Next.js |
+| `pnpm test` · `typecheck` · `lint` | Vitest · tsc · ESLint |
+| `pnpm db:generate` · `db:migrate` · `db:studio` | Drizzle |
+| `pnpm riot:smoke ["Nome#TAG"] [br]` | testa a chave da Riot |
+| `pnpm collect [br] [minutos]` · `pnpm aggregate [patch]` | estatísticas globais |
 
-## Learn More
+## Estrutura
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/lib/riot/        cliente HTTP (rate limit, retry), roteamento, endpoints, tipos
+src/lib/db/          schema Drizzle e conexão
+src/lib/services/    perfil, mappers de partida/timeline, coletor, agregador, tiers
+src/lib/ddragon.ts   dados estáticos (campeões, itens, runas) do Data Dragon
+src/app/lol/…        perfil do jogador, campeões do jogador, debug (JSON cru)
+src/app/champions/…  tier list e página de campeão
+scripts/             smoke test, coletor, agregador
+```
