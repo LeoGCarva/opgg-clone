@@ -43,6 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/champions" className={navLink}>
                 Tier list
               </Link>
+              <Link href="/leaderboard" className={navLink}>
+                Ranking
+              </Link>
               <Link href="/esports/worlds-2026" className={navLink}>
                 Worlds 2026
               </Link>

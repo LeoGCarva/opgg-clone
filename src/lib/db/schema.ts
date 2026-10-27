@@ -224,3 +224,11 @@ export const championMatchups = pgTable(
   },
   (t) => [primaryKey({ columns: [t.patch, t.bracket, t.championId, t.role, t.opponentId] })],
 );
+
+/** Riot IDs resolvidos por puuid para o ranking (account-v1). Não é perfil salvo — isso fica em `accounts`. */
+export const riotIds = pgTable("riot_ids", {
+  puuid: text().primaryKey(),
+  gameName: text().notNull(),
+  tagLine: text().notNull(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
