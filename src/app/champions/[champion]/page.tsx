@@ -149,29 +149,31 @@ function ChampionBuild({
         )}
       </Card>
 
-      <Card title="Feitiços">
-        <Options options={builds.spells} total={games} render={(key) => (
-          <span className="flex gap-1">
-            {ids(key).map((id) => {
-              const spell = data.spells[id];
-              return <GameIcon key={id} src={spell ? ddragonUrl.spell(v, spell.image) : null} alt={spell?.name ?? "Feitiço"} size={36} />;
-            })}
-          </span>
-        )} />
-      </Card>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:col-span-2">
+        <Card title="Feitiços">
+          <Options options={builds.spells} total={games} render={(key) => (
+            <span className="flex gap-1">
+              {ids(key).map((id) => {
+                const spell = data.spells[id];
+                return <GameIcon key={id} src={spell ? ddragonUrl.spell(v, spell.image) : null} alt={spell?.name ?? "Feitiço"} size={36} />;
+              })}
+            </span>
+          )} />
+        </Card>
 
-      <Card title="Itens iniciais">
-        <Options options={builds.start} total={games} render={(key) => <span className="flex gap-1">{ids(key).map((id, i) => <span key={i}>{item(id)}</span>)}</span>} />
-      </Card>
+        <Card title="Itens iniciais">
+          <Options options={builds.start} total={games} render={(key) => <span className="flex gap-1">{ids(key).map((id, i) => <span key={i}>{item(id)}</span>)}</span>} />
+        </Card>
 
-      <Card title="Bota">
-        <Options options={builds.boots} total={games} render={(key) => (
-          <span className="flex items-center gap-2">
-            {item(Number(key))}
-            <span className="text-sm text-ink-soft">{data.items[Number(key)]?.name}</span>
-          </span>
-        )} />
-      </Card>
+        <Card title="Bota">
+          <Options options={builds.boots} total={games} render={(key) => (
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0">{item(Number(key))}</span>
+              <span className="truncate text-sm text-ink-soft">{data.items[Number(key)]?.name}</span>
+            </span>
+          )} />
+        </Card>
+      </div>
 
       <Card title="Build principal (3 primeiros itens)" className="lg:col-span-2">
         <Options options={builds.core} total={games} render={(key) => (
@@ -195,17 +197,21 @@ function ChampionBuild({
       </Card>
 
       <Card title="Habilidades" className="lg:col-span-2">
-        <Options options={builds.skills} total={games} render={(key) => (
-          <span className="flex items-center gap-1.5 font-mono font-bold">
-            {key.split("-").map((slot, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-muted">›</span>}
-                <SkillIcon slot={slot} spells={spells} version={v} size={36} />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+          <div className="lg:w-72 lg:shrink-0">
+            <Options options={builds.skills} total={games} render={(key) => (
+              <span className="flex items-center gap-1.5 font-mono font-bold">
+                {key.split("-").map((slot, i) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    {i > 0 && <span className="text-muted">›</span>}
+                    <SkillIcon slot={slot} spells={spells} version={v} size={36} />
+                  </span>
+                ))}
               </span>
-            ))}
-          </span>
-        )} />
-        {builds.skill_path[0] && <SkillPath path={builds.skill_path[0].key} spells={spells} version={v} />}
+            )} />
+          </div>
+          {builds.skill_path[0] && <SkillPath path={builds.skill_path[0].key} spells={spells} version={v} />}
+        </div>
       </Card>
 
       <Card title="Bom contra">
@@ -288,7 +294,7 @@ function SkillIcon({ slot, spells, version, size }: { slot: string; spells: Cham
 function SkillPath({ path, spells, version }: { path: string; spells: ChampionSpell[] | null; version: string }) {
   const levels = path.split("-");
   return (
-    <div className="overflow-x-auto pt-2">
+    <div className="min-w-0 overflow-x-auto">
       <table className="text-center font-mono text-xs">
         <tbody>
           {["1", "2", "3", "4"].map((slot) => (
