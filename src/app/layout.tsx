@@ -43,6 +43,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/champions" className={navLink}>
                 Tier list
               </Link>
+              <Link href="/esports/worlds-2026" className={navLink}>
+                Worlds 2026
+              </Link>
             </nav>
             <div className="ml-auto py-3">
               <SearchForm compact />
