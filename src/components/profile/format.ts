@@ -79,3 +79,14 @@ export function tierLabel(tier: string, rank: string): string {
   // Mestre+ não tem divisão.
   return ["MASTER", "GRANDMASTER", "CHALLENGER"].includes(tier) ? name : `${name} ${rank}`;
 }
+
+/** Resumo de um jogador na busca: "Desafiante · 3575 PDL", "Nível 123" ou null. */
+export function playerDetail(p: {
+  tier: string | null;
+  rank: string | null;
+  leaguePoints: number | null;
+  summonerLevel: number | null;
+}): string | null {
+  if (p.tier) return `${tierLabel(p.tier, p.rank ?? "")} · ${p.leaguePoints} PDL`;
+  return p.summonerLevel ? `Nível ${p.summonerLevel}` : null;
+}

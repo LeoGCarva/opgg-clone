@@ -31,6 +31,13 @@ export function parseSearchInput(input: string): SearchInput | null {
   return { name, namePattern: escapeLike(name), tagPattern: `${escapeLike(tag)}%` };
 }
 
+/** Busca sem tag: nome exato (sem diferenciar maiúsculas). `null` fora dos limites do Riot ID (3 a 16). */
+export function exactNameInput(input: string): SearchInput | null {
+  const name = input.trim().toLowerCase();
+  if (name.length < 3 || name.length > 16) return null;
+  return { name, namePattern: escapeLike(name) };
+}
+
 export type PlayerSuggestion = {
   gameName: string;
   tagLine: string;
@@ -53,10 +60,19 @@ type Row = {
   league_points: number | null;
 };
 
+/** Autocomplete: prefixo do nome (ou nome + prefixo da tag). */
 export async function searchPlayers(platform: Platform, query: string, limit = 8): Promise<PlayerSuggestion[]> {
   const input = parseSearchInput(query);
-  if (!input) return [];
+  return input ? queryPlayers(platform, input, limit) : [];
+}
 
+/** Todos os jogadores conhecidos com exatamente esse nome (busca sem tag). */
+export async function findPlayersByName(platform: Platform, name: string, limit = 50): Promise<PlayerSuggestion[]> {
+  const input = exactNameInput(name);
+  return input ? queryPlayers(platform, input, limit) : [];
+}
+
+async function queryPlayers(platform: Platform, input: SearchInput, limit: number): Promise<PlayerSuggestion[]> {
   const accountTag = input.tagPattern ? sql`and lower(a.tag_line) like ${input.tagPattern}` : sql``;
   const participantTag = input.tagPattern ? sql`and lower(p.riot_id_tagline) like ${input.tagPattern}` : sql``;
 
