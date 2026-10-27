@@ -15,7 +15,9 @@
     "db:studio": "drizzle-kit studio",
     "riot:smoke": "tsx scripts/riot-smoke.ts",
     "collect": "tsx scripts/collector.ts",
-    "aggregate": "tsx scripts/aggregate.ts"
+    "aggregate": "tsx scripts/aggregate.ts",
+    "db:prune": "tsx scripts/prune.ts",
+    "db:slim-matches": "tsx scripts/slim-matches.ts"
   },
   "dependencies": {
     "bottleneck": "^2.19.5",

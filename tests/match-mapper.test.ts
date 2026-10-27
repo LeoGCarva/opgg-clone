@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchToRows, patchOf, runePage } from "@/lib/services/match-mapper";
+import { matchToRows, patchOf, runePage, slimMatch } from "@/lib/services/match-mapper";
 import type { MatchDto, ParticipantDto } from "@/lib/riot/types";
 
 function participant(overrides: Partial<ParticipantDto> = {}): ParticipantDto {
@@ -60,7 +60,7 @@ describe("matchToRows", () => {
       gameDuration: 1680,
       gameCreation: new Date(1_700_000_000_000),
     });
-    expect(match.raw).toBe(dto);
+    expect(match.raw).toEqual(slimMatch(dto));
   });
 
   it("gera uma linha por participante com campos derivados", () => {
@@ -80,6 +80,24 @@ describe("matchToRows", () => {
 
   it("guarda nome vazio como null", () => {
     expect(participants[1].riotIdGameName).toBeNull();
+  });
+});
+
+describe("slimMatch", () => {
+  const heavy = { ...participant(), challenges: { kda: 7.5 }, missions: { playerScore0: 1 } } as ParticipantDto;
+  const full: MatchDto = { ...dto, info: { ...dto.info, participants: [heavy] } };
+
+  it("remove challenges e missions e mantém o resto", () => {
+    const [p] = slimMatch(full).info.participants;
+    expect(p).not.toHaveProperty("challenges");
+    expect(p).not.toHaveProperty("missions");
+    expect(p).toEqual(participant());
+    expect(slimMatch(full).info.gameVersion).toBe(dto.info.gameVersion);
+  });
+
+  it("não altera a partida original", () => {
+    slimMatch(full);
+    expect(full.info.participants[0]).toHaveProperty("challenges");
   });
 });
 

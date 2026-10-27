@@ -1,5 +1,5 @@
 // Apenas os campos que usamos. A resposta real tem muito mais coisa,
-// e o JSON completo da partida é guardado em matches.raw.
+// e o JSON da partida (sem challenges/missions) é guardado em matches.raw.
 
 export type AccountDto = {
   puuid: string;

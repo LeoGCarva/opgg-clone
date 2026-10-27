@@ -63,7 +63,7 @@ da Riot nunca chega ao navegador.
 | Arquivo | O que faz |
 |---|---|
 | `profile.ts` | **Perfil do jogador.** `refreshProfile` (Riot → banco: conta, elos e últimas 20 partidas; só baixa as que faltam). `loadOlderMatches` ("carregar mais": próximas 20 mais antigas que a mais antiga salva, por fila). `getProfile` (só banco: conta, elos, histórico de PDL dos últimos 30 dias por fila e N partidas com os 10 participantes de cada). O refresh grava uma foto em `lp_history` por fila ranqueada quando tier/divisão/PDL/V/D mudou. Filtros de fila `all/solo/flex`. Cooldown do botão Atualizar: 2 min. |
-| `match-mapper.ts` | Converte a partida da Riot em linhas do banco: partida (patch curto `16.21`), 10 participantes (CS, itens, runa principal, estilo secundário...) e bans. Recebe opcionalmente a timeline e o bracket de elo. |
+| `match-mapper.ts` | Converte a partida da Riot em linhas do banco: partida (patch curto `16.21`), 10 participantes (CS, itens, runa principal, estilo secundário...) e bans. Recebe opcionalmente a timeline e o bracket de elo. Guarda o `raw` via `slimMatch()` (sem `challenges`/`missions` dos participantes) e a página de runas completa via `runePage()`. |
 | `timeline-mapper.ts` | Extrai da timeline (~450 KB, não é guardada): ordem de compra dos itens (aplicando `ITEM_UNDO`), ordem de skills (ignora `EVOLVE`) e itens do primeiro minuto. |
 | `match-store.ts` | Grava partidas + participantes + bans em transação, idempotente (`onConflictDoNothing`); modo `replace` promove uma partida do perfil para a versão com timeline. |
 | `champion-stats.ts` | **Campeões de um jogador**: agregação SQL por campeão (jogos, vitórias, médias de K/D/A, CS, CS/min, dano, ouro, rota mais comum), sem remakes e sem Arena (filtrada pelo modo `CHERRY`). Builds por campeão. |
@@ -97,6 +97,8 @@ da Riot nunca chega ao navegador.
 | `pnpm riot:smoke ["Nome#TAG"] [br]` | Testa a chave e o cliente contra a API real (sem Riot ID usa o 1º do Challenger). |
 | `pnpm collect [br] [minutos]` | Roda o coletor em loop alternando brackets; agrega a cada 30 min e ao parar; Ctrl+C termina limpo; com `minutos` para sozinho. |
 | `pnpm aggregate [patch]` | Recalcula as estatísticas (padrão: patch mais recente coletado). |
+| `pnpm db:prune [--yes]` | Retenção: apaga partidas do coletor de patches fora dos 3 mais recentes (exceto as com jogador que tem perfil no site) e as estatísticas desses patches. Sem `--yes` só mostra o que apagaria. |
+| `pnpm db:slim-matches export \| restore <arquivo>` | Reconstrução única de `matches` com o JSON enxuto: `export` grava backup em `.backup/` (ignorado pelo git) e confere a contagem; `restore` remove as FKs, esvazia `matches`, reinsere enxuto e recria as FKs. Retomável se cair no meio. |
 
 ---
 
@@ -162,12 +164,16 @@ Nomes de colunas em snake_case. Conexão em `src/lib/db/index.ts` (pool no `glob
 ### Tabelas de partidas (compartilhadas por perfil e coletor)
 | Tabela | Chave | Colunas principais | Índices |
 |---|---|---|---|
-| `matches` | `match_id` | `platform`, `queue_id`, `game_version`, `patch`, `game_creation`, `game_duration`, `raw` (JSON completo da Riot), `tier_bracket`, `has_timeline` | `(queue_id, patch)`; `(patch, tier_bracket) WHERE has_timeline` |
+| `matches` | `match_id` | `platform`, `queue_id`, `game_version`, `patch`, `game_creation`, `game_duration`, `raw` (JSON da Riot sem `challenges`/`missions` dos participantes), `tier_bracket`, `has_timeline` | `(queue_id, patch)`; `(patch, tier_bracket) WHERE has_timeline` |
 | `match_participants` | `(match_id, puuid)` | time, Riot ID, campeão, nível, rota (`team_position`), vitória, K/D/A, `cs`, ouro, dano, visão, `items[7]`, feitiços, `keystone_id`, `secondary_style_id`, `runes[]` (página completa: árvore, 4 runas, árvore, 2 runas, 3 fragmentos; null em linhas antigas), `item_build[]`, `skill_order[]`, `start_items[]` (estes três só do coletor), `queue_id` e `game_creation` copiados | histórico `(puuid, game_creation desc)`; prefixo `lower(riot_id_game_name) text_pattern_ops` |
 | `match_bans` | `(match_id, team_id, pick_turn)` | `champion_id` | — |
 
-Partidas são imutáveis: baixadas uma vez e guardadas para sempre (o `raw` permite reprocessar
-sem gastar requisições). `match_participants` e `match_bans` apagam em cascata com a partida.
+Partidas são imutáveis: baixadas uma vez (o `raw` permite reprocessar sem gastar requisições).
+`slimMatch()` tira `challenges` e `missions` antes de salvar — ~54% do tamanho guardado, e o site não usa.
+`pnpm db:prune` apaga partidas do coletor de patches fora dos 3 mais recentes, exceto as que têm
+jogador com perfil no site, e as estatísticas derivadas desses patches. `pnpm db:slim-matches`
+(export → restore) é a reconstrução única que enxugou as partidas antigas: o Postgres não devolve
+espaço ao Neon com UPDATE/DELETE. `match_participants` e `match_bans` apagam em cascata com a partida.
 
 ### Tabelas do coletor e do agregador
 | Tabela | Chave | Conteúdo |

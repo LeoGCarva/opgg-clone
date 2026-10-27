@@ -12,6 +12,26 @@ export function patchOf(gameVersion: string): string {
   return gameVersion.split(".").slice(0, 2).join(".");
 }
 
+// Metade do JSON de cada partida, e o site não usa nenhum dos dois. Guardar sem eles mantém
+// o banco dentro do limite do plano gratuito do Neon.
+export const DROPPED_PARTICIPANT_FIELDS = ["challenges", "missions"];
+
+/** Cópia da partida sem os campos pesados de cada participante. */
+export function slimMatch(dto: MatchDto): MatchDto {
+  return {
+    ...dto,
+    info: {
+      ...dto.info,
+      participants: dto.info.participants.map(
+        (p) =>
+          Object.fromEntries(
+            Object.entries(p).filter(([key]) => !DROPPED_PARTICIPANT_FIELDS.includes(key)),
+          ) as ParticipantDto,
+      ),
+    },
+  };
+}
+
 /** [primária, 4 runas, secundária, 2 runas, fragmentos]; null se a página vier incompleta. */
 export function runePage(perks: ParticipantDto["perks"] | undefined): number[] | null {
   const primary = perks?.styles.find((s) => s.description === "primaryStyle");
@@ -48,7 +68,7 @@ export function matchToRows(
     patch: patchOf(info.gameVersion),
     gameCreation,
     gameDuration: info.gameDuration,
-    raw: dto,
+    raw: slimMatch(dto),
     tierBracket: extra.tierBracket ?? null,
     hasTimeline: !!builds,
   };
