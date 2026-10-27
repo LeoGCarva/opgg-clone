@@ -18,7 +18,7 @@ const instrumentSans = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "opgg clone",
+  title: "rubra",
   description: "Estatísticas de League of Legends",
 };
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               href="/"
               className="shrink-0 bg-accent px-2 py-1 font-display text-lg leading-none font-black text-ink uppercase [font-stretch:125%]"
             >
-              opgg clone
+              rubra
             </Link>
             <nav aria-label="Principal" className="flex flex-wrap gap-x-6">
               <Link href="/champions" className={navLink}>

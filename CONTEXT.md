@@ -1,4 +1,4 @@
-# CONTEXT — opgg clone
+# CONTEXT — rubra
 
 Visão geral de **todas** as funcionalidades da aplicação, separada em backend, frontend e banco
 de dados. Para instalação e comandos, veja o [README](README.md).

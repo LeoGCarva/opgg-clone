@@ -1,4 +1,4 @@
-# opgg clone
+# rubra
 
 Clone de estudo do op.gg / u.gg: perfil de jogadores, campeões mais jogados e estatísticas
 globais de campeões (tier list, builds, runas, counters) a partir da API da Riot, e uma aba

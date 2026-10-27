@@ -15,7 +15,7 @@ import { getGames, getSchedule, load, stageLabel, tabLabel, WORLDS_2026 } from "
 
 type Props = PageProps<"/esports/worlds-2026/match/[matchId]">;
 
-export const metadata: Metadata = { title: "Worlds 2026 · Série · opgg clone" };
+export const metadata: Metadata = { title: "Worlds 2026 · Série · rubra" };
 
 export default function WorldsMatchPage({ params, searchParams }: Props) {
   return (

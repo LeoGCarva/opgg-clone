@@ -8,7 +8,7 @@ import { LeaguepediaErrorBox, pill, WorldsTabs } from "@/components/esports/worl
 import { seriesStatus, type Series } from "@/lib/esports/parse";
 import { getSchedule, load, stageLabel, tabLabel, WORLDS_2026 } from "@/lib/esports/worlds";
 
-export const metadata: Metadata = { title: "Worlds 2026 · Calendário · opgg clone" };
+export const metadata: Metadata = { title: "Worlds 2026 · Calendário · rubra" };
 
 // ?fase= → nome da fase na Leaguepedia
 const STAGES = { "play-in": "Play-In", "main-event": "Main Event" } as const;

@@ -20,7 +20,7 @@ import {
 } from "@/lib/services/tier-filters";
 import type { Tier, TierEntry } from "@/lib/services/tiers";
 
-export const metadata: Metadata = { title: "Tier list de campeões · opgg clone" };
+export const metadata: Metadata = { title: "Tier list de campeões · rubra" };
 
 export default function ChampionsPage({ searchParams }: PageProps<"/champions">) {
   return (

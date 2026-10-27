@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getStaticData();
   const id = championIdBySlug(data, champion);
   const name = id ? data.champions[id].name : champion;
-  return { title: `${name}: build, runas e counters · opgg clone` };
+  return { title: `${name}: build, runas e counters · rubra` };
 }
 
 export default function ChampionPage({ params, searchParams }: Props) {

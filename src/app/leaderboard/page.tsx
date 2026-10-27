@@ -20,7 +20,7 @@ import {
 } from "@/lib/services/leaderboard";
 import { getLeaderboard, resolveNames, type Leaderboard, type PlayerName } from "@/lib/services/leaderboard-data";
 
-export const metadata: Metadata = { title: "Ranking Solo/Duo · opgg clone" };
+export const metadata: Metadata = { title: "Ranking Solo/Duo · rubra" };
 
 const BASE = "/leaderboard";
 const PER_PAGE = 100;

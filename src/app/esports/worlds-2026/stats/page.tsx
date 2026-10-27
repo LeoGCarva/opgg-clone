@@ -18,7 +18,7 @@ import {
 } from "@/lib/esports/tournament-stats";
 import { getGames, load, WORLDS_2026 } from "@/lib/esports/worlds";
 
-export const metadata: Metadata = { title: "Worlds 2026 · Estatísticas · opgg clone" };
+export const metadata: Metadata = { title: "Worlds 2026 · Estatísticas · rubra" };
 
 type Props = PageProps<"/esports/worlds-2026/stats">;
 

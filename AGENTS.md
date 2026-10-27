@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# AGENTS.md — opgg clone
+# AGENTS.md — rubra
 
 Canonical, tool-agnostic guide for any AI assistant working in this repo. (`CLAUDE.md`, `.cursorrules`, etc. should just point here.)
 

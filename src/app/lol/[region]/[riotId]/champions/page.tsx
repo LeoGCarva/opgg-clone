@@ -13,7 +13,7 @@ type Props = PageProps<"/lol/[region]/[riotId]/champions">;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const riotId = parseRiotIdSlug((await params).riotId);
-  return { title: riotId ? `Campeões de ${riotId.gameName}#${riotId.tagLine} · opgg clone` : "opgg clone" };
+  return { title: riotId ? `Campeões de ${riotId.gameName}#${riotId.tagLine} · rubra` : "rubra" };
 }
 
 export default function PlayerChampionsPage({ params, searchParams }: Props) {
