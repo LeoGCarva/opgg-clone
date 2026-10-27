@@ -160,4 +160,16 @@ describe("rate limit", () => {
     // As duas primeiras saem na hora; a terceira espera a janela de 1s recarregar.
     expect(Date.now() - started).toBeGreaterThanOrEqual(900);
   });
+
+  it("clientes com os mesmos limiters dividem o limite (como após um HMR)", async () => {
+    server.use(http.get("https://br1.api.riotgames.com/*", () => HttpResponse.json({})));
+    const limiters = new Map();
+    const options = { apiKey: "RGAPI-test", rateLimits: [{ limit: 2, windowSec: 1 }], limiters };
+    const [a, b] = [createRiotClient(options), createRiotClient(options)];
+    clients.push(a);
+
+    const started = Date.now();
+    await Promise.all([a.get("br1", "/x"), a.get("br1", "/x"), b.get("br1", "/x")]);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(900);
+  });
 });

@@ -40,7 +40,11 @@ export type RiotClientOptions = {
   maxRetries?: number;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
+  /** Limiters por host; passe o mesmo Map para clientes diferentes dividirem o rate limit. */
+  limiters?: RiotLimiters;
 };
+
+export type RiotLimiters = Map<RoutingHost, Bottleneck[]>;
 
 export type RiotClient = {
   get<T>(host: RoutingHost, path: string, query?: Query): Promise<T>;
@@ -55,10 +59,9 @@ export function createRiotClient({
   maxRetries = 3,
   fetch: fetchImpl = fetch,
   sleep = defaultSleep,
-}: RiotClientOptions): RiotClient {
   // O limite da aplicação é contado por host (cada plataforma/região tem o seu).
-  const limiters = new Map<RoutingHost, Bottleneck[]>();
-
+  limiters = new Map(),
+}: RiotClientOptions): RiotClient {
   function limiterFor(host: RoutingHost): Bottleneck {
     let chain = limiters.get(host);
     if (!chain) {
@@ -123,17 +126,22 @@ export function createRiotClient({
   return { get, close };
 }
 
-// Singleton por processo; guardado no globalThis para sobreviver ao HMR do `next dev`,
-// senão cada reload criaria limiters novos e o rate limit deixaria de valer.
-const globalForRiot = globalThis as unknown as { riotClient?: RiotClient };
+// Só os limiters ficam no globalThis, para o rate limit sobreviver ao HMR do `next dev`.
+// O cliente é recriado a cada carga do módulo: guardado no globalThis, ele lançava as classes
+// de erro da versão antiga do módulo, e `instanceof RiotNotFoundError` falhava nas páginas
+// (o 404 da Riot vazava como erro em vez de virar "Jogador não encontrado"). De quebra, uma
+// chave nova no .env passa a valer no próximo reload.
+const globalForRiot = globalThis as unknown as { riotLimiters?: RiotLimiters };
+let client: RiotClient | undefined;
 
 export function getRiotClient(): RiotClient {
-  if (!globalForRiot.riotClient) {
+  if (!client) {
     const { RIOT_API_KEY, RIOT_RATE_LIMITS } = env();
-    globalForRiot.riotClient = createRiotClient({
+    client = createRiotClient({
       apiKey: RIOT_API_KEY,
       rateLimits: parseRateLimits(RIOT_RATE_LIMITS),
+      limiters: (globalForRiot.riotLimiters ??= new Map()),
     });
   }
-  return globalForRiot.riotClient;
+  return client;
 }

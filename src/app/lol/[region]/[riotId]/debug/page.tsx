@@ -61,8 +61,8 @@ async function ProfileData({ params }: { params: Params }) {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">
         {account.gameName}
-        <span className="text-zinc-500">#{account.tagLine}</span>
-        <span className="ml-3 align-middle text-sm font-normal uppercase text-zinc-500">
+        <span className="text-muted">#{account.tagLine}</span>
+        <span className="ml-3 align-middle text-sm font-normal uppercase text-muted">
           {region} · {platform}
         </span>
       </h1>
@@ -84,7 +84,7 @@ async function ProfileData({ params }: { params: Params }) {
           {matches.map((match) => (
             <details
               key={match.metadata.matchId}
-              className="rounded-md border border-zinc-800 open:bg-zinc-900/40"
+              className="border border-line open:bg-surface"
             >
               <summary className="cursor-pointer px-4 py-3 text-sm">
                 <MatchSummary match={match} puuid={account.puuid} />
@@ -105,14 +105,14 @@ function MatchSummary({ match, puuid }: { match: MatchDto; puuid: string }) {
   const minutes = Math.round(match.info.gameDuration / 60);
   return (
     <span className="inline-flex flex-wrap items-center gap-x-3">
-      <span className={me?.win ? "font-semibold text-sky-400" : "font-semibold text-red-400"}>
+      <span className={me?.win ? "font-semibold text-win" : "font-semibold text-loss"}>
         {me?.win ? "Vitória" : "Derrota"}
       </span>
       <span>{me?.championName}</span>
       <span className="font-mono">
         {me?.kills}/{me?.deaths}/{me?.assists}
       </span>
-      <span className="text-zinc-500">
+      <span className="text-muted">
         fila {match.info.queueId} · {minutes} min · {match.metadata.matchId}
       </span>
     </span>
@@ -132,7 +132,7 @@ function Section({
     <section className="space-y-2">
       <h2 className="flex flex-wrap items-baseline gap-x-3 text-lg font-semibold">
         {title}
-        <code className="text-xs font-normal text-zinc-500">{endpoint}</code>
+        <code className="text-xs font-normal text-muted">{endpoint}</code>
       </h2>
       {children}
     </section>
@@ -141,16 +141,16 @@ function Section({
 
 function ErrorBox({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-red-900 bg-red-950/50 p-4 text-red-300">{children}</div>
+    <div className="border border-loss/40 bg-loss/10 p-4 text-loss">{children}</div>
   );
 }
 
 function ProfileSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
-      <div className="h-9 w-64 rounded bg-zinc-800" />
+      <div className="h-9 w-64 bg-divider" />
       {[1, 2, 3].map((i) => (
-        <div key={i} className="h-32 rounded bg-zinc-900" />
+        <div key={i} className="h-32 bg-surface" />
       ))}
     </div>
   );

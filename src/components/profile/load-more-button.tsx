@@ -15,11 +15,11 @@ export function LoadMoreButton({ action }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg border border-zinc-800 bg-zinc-900/60 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+        className="h-12 w-full border-2 border-ink bg-surface text-[15px] font-bold text-ink hover:bg-canvas disabled:opacity-50"
       >
         {pending ? "Buscando partidas antigas..." : "Carregar mais"}
       </button>
-      {!pending && state.error && <p className="text-sm text-red-400">{state.error}</p>}
+      {!pending && state.error && <p className="text-sm text-loss">{state.error}</p>}
     </form>
   );
 }

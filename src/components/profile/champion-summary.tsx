@@ -17,8 +17,8 @@ export function ChampionSummary({
   href: string;
 }) {
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-      <h2 className="text-sm font-medium text-zinc-400">Campeões mais jogados</h2>
+    <section className="border border-line bg-surface p-4">
+      <h2 className="text-sm font-medium text-muted">Campeões mais jogados</h2>
       {stats.length ? (
         <ul className="mt-3 space-y-2.5">
           {stats.slice(0, SHOWN).map((s) => {
@@ -34,11 +34,11 @@ export function ChampionSummary({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{champion?.name ?? s.championId}</p>
-                  <p className="text-xs text-zinc-500">{s.csPerMin.toFixed(1)} CS/min</p>
+                  <p className="text-xs text-muted">{s.csPerMin.toFixed(1)} CS/min</p>
                 </div>
                 <div className="text-right text-xs">
-                  <p className="text-zinc-300">{kdaRatio(s.kills, s.deaths, s.assists)}</p>
-                  <p className="text-zinc-500">
+                  <p className="text-ink-soft">{kdaRatio(s.kills, s.deaths, s.assists)}</p>
+                  <p className="text-muted">
                     <span className={winRateClass(wr)}>{wr}%</span> · {s.games}j
                   </p>
                 </div>
@@ -47,10 +47,10 @@ export function ChampionSummary({
           })}
         </ul>
       ) : (
-        <p className="mt-2 text-sm text-zinc-500">Sem partidas nessa fila.</p>
+        <p className="mt-2 text-sm text-muted">Sem partidas nessa fila.</p>
       )}
       {stats.length > 0 && (
-        <Link href={href} className="mt-4 block text-center text-xs text-sky-400 hover:underline">
+        <Link href={href} className="mt-4 block text-center text-xs text-link hover:underline">
           Ver todos os campeões e builds
         </Link>
       )}

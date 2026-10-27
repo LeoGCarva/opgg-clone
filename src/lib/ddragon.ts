@@ -137,3 +137,68 @@ export function championIdBySlug(data: StaticData, slug: string): number | null 
 export function queueName(data: StaticData, queueId: number): string {
   return data.queues[queueId] ?? `Fila ${queueId}`;
 }
+
+// ---- Nomes em inglês → ids (dados de esports da Leaguepedia vêm em inglês) ----
+
+export type NameIndex = {
+  champions: Record<string, number>;
+  items: Record<string, number>;
+  spells: Record<string, number>;
+  runes: Record<string, number>; // keystones, runas e árvores
+};
+
+/** Chave de comparação: sem acentos, espaços e pontuação ("Kai'Sa" → "kaisa"). */
+export function nameKey(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[^\p{L}\p{N}]/gu, "")
+    .toLowerCase();
+}
+
+type NamedEntry = { id: number; name: string; preferred: boolean };
+
+/** Monta o índice; com nomes repetidos, fica a versão de Summoner's Rift e, depois, o menor id. */
+export function buildNameIndex(groups: Record<keyof NameIndex, NamedEntry[]>): NameIndex {
+  const build = (entries: NamedEntry[]) => {
+    const index: Record<string, number> = {};
+    const sorted = [...entries].sort((a, b) => Number(b.preferred) - Number(a.preferred) || a.id - b.id);
+    for (const e of sorted) index[nameKey(e.name)] ??= e.id;
+    return index;
+  };
+  return {
+    champions: build(groups.champions),
+    items: build(groups.items),
+    spells: build(groups.spells),
+    runes: build(groups.runes),
+  };
+}
+
+export async function getNameIndex(): Promise<NameIndex> {
+  "use cache";
+  cacheLife("days");
+
+  const [version] = await getJson<string[]>(`${DDRAGON}/api/versions.json`);
+  const data = `${DDRAGON}/cdn/${version}/data/en_US`;
+  const [champions, summoners, items, runeStyles] = await Promise.all([
+    getJson<{ data: Record<string, { key: string; name: string }> }>(`${data}/champion.json`),
+    getJson<{ data: Record<string, { key: string; name: string; modes: string[] }> }>(`${data}/summoner.json`),
+    getJson<{ data: Record<string, { name: string; maps: Record<string, boolean> }> }>(`${data}/item.json`),
+    getJson<{ id: number; name: string; slots: { runes: { id: number; name: string }[] }[] }[]>(
+      `${data}/runesReforged.json`,
+    ),
+  ]);
+
+  return buildNameIndex({
+    champions: Object.values(champions.data).map((c) => ({ id: Number(c.key), name: c.name, preferred: true })),
+    spells: Object.values(summoners.data).map((s) => ({
+      id: Number(s.key),
+      name: s.name,
+      preferred: s.modes.includes("CLASSIC"),
+    })),
+    items: Object.entries(items.data).map(([id, i]) => ({ id: Number(id), name: i.name, preferred: !!i.maps["11"] })),
+    runes: runeStyles.flatMap((style) => [
+      { id: style.id, name: style.name, preferred: true },
+      ...style.slots.flatMap((s) => s.runes.map((r) => ({ id: r.id, name: r.name, preferred: true }))),
+    ]),
+  });
+}

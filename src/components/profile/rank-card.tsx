@@ -1,43 +1,141 @@
 import type { leagueEntries } from "@/lib/db/schema";
-import { tierLabel, winRate } from "./format";
+import { buildLpChart, LP_HISTORY_DAYS, type LpPoint } from "@/lib/services/lp-history";
+import { tierLabel, winRate, winRateClass } from "./format";
+import { TierIcon } from "./tier-icon";
 
 type LeagueEntry = typeof leagueEntries.$inferSelect;
 
 const TIER_COLORS: Record<string, string> = {
-  IRON: "text-stone-400",
-  BRONZE: "text-amber-700",
-  SILVER: "text-slate-300",
-  GOLD: "text-yellow-400",
-  PLATINUM: "text-teal-300",
-  EMERALD: "text-emerald-400",
-  DIAMOND: "text-sky-300",
-  MASTER: "text-fuchsia-400",
-  GRANDMASTER: "text-red-400",
-  CHALLENGER: "text-amber-300",
+  IRON: "text-elo-iron",
+  BRONZE: "text-elo-bronze",
+  SILVER: "text-elo-silver",
+  GOLD: "text-elo-gold",
+  PLATINUM: "text-elo-platinum",
+  EMERALD: "text-elo-emerald",
+  DIAMOND: "text-elo-diamond",
+  MASTER: "text-elo-master",
+  GRANDMASTER: "text-elo-grandmaster",
+  CHALLENGER: "text-elo-challenger",
 };
 
-export function RankCard({ title, entry }: { title: string; entry?: LeagueEntry }) {
+export function RankCard({ title, entry, history = [] }: { title: string; entry?: LeagueEntry; history?: LpPoint[] }) {
+  const games = entry ? entry.wins + entry.losses : 0;
+  const wr = entry ? winRate(entry.wins, entry.losses) : 0;
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-      <h2 className="text-sm font-medium text-zinc-400">{title}</h2>
+    <section className="border border-line bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-divider px-[18px] py-3">
+        <h2 className="font-sans text-sm font-bold text-ink">{title}</h2>
+        {entry && <span className="text-[13px] text-muted">{games} jogos</span>}
+      </div>
       {entry ? (
-        <div className="mt-2 flex items-end justify-between gap-4">
-          <div>
-            <p className={`text-xl font-bold ${TIER_COLORS[entry.tier] ?? ""}`}>
-              {tierLabel(entry.tier, entry.rank)}
-            </p>
-            <p className="text-sm text-zinc-300">{entry.leaguePoints} PDL</p>
+        <>
+          {/* Cartão estreito: as estatísticas descem para a linha de baixo quando não cabem ao lado. */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-[18px]">
+            <div className="flex items-center gap-3">
+              <TierIcon tier={entry.tier} size={44} />
+              <div>
+                <p className={`font-display text-[22px] leading-tight font-extrabold [font-stretch:112%] ${TIER_COLORS[entry.tier] ?? ""}`}>
+                  {tierLabel(entry.tier, entry.rank)}
+                </p>
+                <p className="text-sm text-muted">{entry.leaguePoints} PDL</p>
+              </div>
+            </div>
+            <div className="ml-auto text-right whitespace-nowrap">
+              <p className="text-[13px] text-muted">
+                {entry.wins}V {entry.losses}D
+              </p>
+              <p className={`font-display text-[17px] font-extrabold ${winRateClass(wr)}`}>{wr}%</p>
+            </div>
           </div>
-          <div className="text-right text-sm">
-            <p className="text-zinc-300">
-              {entry.wins}V {entry.losses}D
-            </p>
-            <p className="text-zinc-500">{winRate(entry.wins, entry.losses)}% de vitórias</p>
-          </div>
-        </div>
+          <LpChartSection entry={entry} history={history} />
+        </>
       ) : (
-        <p className="mt-2 text-zinc-500">Unranked</p>
+        <p className="flex items-center gap-3 p-[18px] text-muted">
+          <TierIcon tier={null} size={40} className="opacity-60" />
+          Unranked
+        </p>
       )}
     </section>
+  );
+}
+
+const WIDTH = 260;
+const shortDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+const HEIGHT = 112;
+
+/** Gráfico de PDL dos últimos 30 dias: só a linha, o piso da divisão atual, o pico e o ponto de hoje. */
+function LpChartSection({ entry, history }: { entry: LeagueEntry; history: LpPoint[] }) {
+  const chart = buildLpChart(history, { width: WIDTH, height: HEIGHT });
+  if (!chart) {
+    return (
+      <p className="border-t border-divider px-[18px] py-3 text-[13px] text-muted">
+        O gráfico de PDL aparece depois da próxima atualização com mudança de PDL.
+      </p>
+    );
+  }
+
+  const up = chart.delta > 0;
+  const deltaText = `${chart.delta > 0 ? "+" : chart.delta < 0 ? "−" : ""}${Math.abs(chart.delta)} PDL`;
+  const peak = chart.peak.point;
+  const peakLabel = `${tierLabel(peak.tier, peak.rank)} · ${peak.leaguePoints} PDL`;
+  const floorLabel = `${tierLabel(entry.tier, entry.rank)} 0`;
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-divider p-[18px]">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-xs font-semibold text-muted">Últimos {LP_HISTORY_DAYS} dias</span>
+        <span
+          className={`flex items-center gap-1 font-display text-[22px] font-extrabold [font-stretch:112%] ${
+            chart.delta > 0 ? "text-win" : chart.delta < 0 ? "text-loss" : "text-ink"
+          }`}
+        >
+          {chart.delta !== 0 && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {up ? (
+                <>
+                  <path d="M12 19 V5" />
+                  <path d="M5 12 L12 5 L19 12" />
+                </>
+              ) : (
+                <>
+                  <path d="M12 5 V19" />
+                  <path d="M5 12 L12 19 L19 12" />
+                </>
+              )}
+            </svg>
+          )}
+          {deltaText}
+        </span>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        className="h-auto w-full overflow-visible"
+        role="img"
+        aria-label={`PDL nos últimos ${LP_HISTORY_DAYS} dias: ${deltaText}, pico em ${peakLabel}`}
+      >
+        {chart.floorY !== null && (
+          <>
+            <line x1="0" x2={WIDTH} y1={chart.floorY} y2={chart.floorY} stroke="var(--color-line-strong)" strokeDasharray="3 4" />
+            <text x={WIDTH} y={chart.floorY - 5} textAnchor="end" fill="var(--color-muted)" fontSize="10" fontWeight="600">
+              {floorLabel}
+            </text>
+          </>
+        )}
+        <path d={chart.path} fill="none" stroke="var(--color-ink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={chart.peak.x} cy={chart.peak.y} r="3" fill="var(--color-surface)" stroke="var(--color-ink)" strokeWidth="1.5" />
+        <circle cx={chart.end.x} cy={chart.end.y} r="5" fill="var(--color-accent)" stroke="var(--color-ink)" strokeWidth="2" />
+      </svg>
+
+      <div className="flex justify-between text-xs text-muted">
+        <span>{shortDate.format(history[0].recordedAt)}</span>
+        <span>{shortDate.format(history[history.length - 1].recordedAt)}</span>
+      </div>
+
+      <p className="flex items-baseline justify-between gap-3 border-t border-divider pt-3 text-xs font-semibold text-muted">
+        Pico
+        <span className="font-display text-sm font-extrabold text-ink">{peakLabel}</span>
+      </p>
+    </div>
   );
 }

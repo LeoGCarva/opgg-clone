@@ -53,7 +53,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
   if (!result.ok) return <RiotErrorBox error={result.error} />;
 
   const { profile, now } = result;
-  const { account, leagues, matches } = profile;
+  const { account, leagues, lpHistory, matches } = profile;
   const championStats = await getPlayerChampionStats(account.puuid, { queue });
   const championsHref = queue === "all" ? `${basePath}/champions` : `${basePath}/champions?queue=${queue}`;
   // Se veio a página cheia, pode haver mais partidas (no banco ou na Riot).
@@ -71,8 +71,16 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
 
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <aside className="space-y-4">
-          <RankCard title="Ranqueada Solo/Duo" entry={leagues.find((l) => l.queueType === "RANKED_SOLO_5x5")} />
-          <RankCard title="Ranqueada Flex" entry={leagues.find((l) => l.queueType === "RANKED_FLEX_SR")} />
+          <RankCard
+            title="Ranqueada Solo/Duo"
+            entry={leagues.find((l) => l.queueType === "RANKED_SOLO_5x5")}
+            history={lpHistory.RANKED_SOLO_5x5}
+          />
+          <RankCard
+            title="Ranqueada Flex"
+            entry={leagues.find((l) => l.queueType === "RANKED_FLEX_SR")}
+            history={lpHistory.RANKED_FLEX_SR}
+          />
           <ChampionSummary stats={championStats} data={data} href={championsHref} />
         </aside>
 
@@ -83,7 +91,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
               <MatchCard key={m.matchId} match={m} data={data} region={route.region} now={now} />
             ))
           ) : (
-            <p className="rounded-lg border border-zinc-800 p-6 text-center text-zinc-500">
+            <p className="border border-line p-6 text-center text-muted">
               Nenhuma partida nessa fila entre as últimas salvas.
             </p>
           )}
@@ -96,7 +104,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
       </div>
 
       <footer className="text-right text-xs">
-        <Link href={`${basePath}/debug`} className="text-zinc-600 hover:text-zinc-400">
+        <Link href={`${basePath}/debug`} className="text-muted hover:text-muted">
           ver JSON cru da Riot
         </Link>
       </footer>
@@ -108,14 +116,14 @@ function ProfileSkeleton() {
   return (
     <div className="animate-pulse space-y-8">
       <div className="flex items-center gap-5">
-        <div className="size-22 rounded-xl bg-zinc-800" />
-        <div className="h-8 w-56 rounded bg-zinc-800" />
+        <div className="size-22 bg-divider" />
+        <div className="h-8 w-56 bg-divider" />
       </div>
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <div className="h-24 rounded-lg bg-zinc-900" />
+        <div className="h-24 bg-surface" />
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 rounded-lg bg-zinc-900" />
+            <div key={i} className="h-24 bg-surface" />
           ))}
         </div>
       </div>

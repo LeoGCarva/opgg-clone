@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function PlayerChampionsPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <Suspense fallback={<div className="h-96 animate-pulse rounded-lg bg-zinc-900" />}>
+      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
         <ChampionsContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -44,7 +44,7 @@ async function ChampionsContent({ params, searchParams }: Pick<Props, "params" |
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <Link href={basePath} className="text-sm text-zinc-500 hover:text-zinc-300">
+        <Link href={basePath} className="text-sm text-muted hover:text-ink-soft">
           ← {account.gameName}#{account.tagLine}
         </Link>
         <h1 className="text-2xl font-bold">Campeões</h1>
@@ -55,15 +55,15 @@ async function ChampionsContent({ params, searchParams }: Pick<Props, "params" |
       {stats.length ? (
         <ChampionTable stats={stats} builds={builds} data={data} />
       ) : (
-        <p className="rounded-lg border border-zinc-800 p-6 text-center text-zinc-500">
+        <p className="border border-line p-6 text-center text-muted">
           Nenhuma partida nessa fila.
         </p>
       )}
 
-      <p className="text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-muted">
         Baseado em {totalGames} partida{totalGames === 1 ? "" : "s"} salva{totalGames === 1 ? "" : "s"}
         {queue === "all" && " (sem Arena e remakes)"}. Use &ldquo;Carregar mais&rdquo; no{" "}
-        <Link href={basePath} className="text-sky-400 hover:underline">
+        <Link href={basePath} className="text-link hover:underline">
           perfil
         </Link>{" "}
         para incluir partidas mais antigas.

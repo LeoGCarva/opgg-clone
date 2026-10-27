@@ -5,6 +5,10 @@ const envSchema = z.object({
   RIOT_API_KEY: z.string().startsWith("RGAPI-"),
   // "limite:janela_em_segundos" separados por vírgula. Padrão = chave de desenvolvimento.
   RIOT_RATE_LIMITS: z.string().default("20:1,100:120"),
+  // Bot password da Leaguepedia (lol.fandom.com/wiki/Special:BotPasswords). Sem login a API
+  // Cargo responde "ratelimited" quase sempre.
+  LEAGUEPEDIA_USER: z.string().optional(),
+  LEAGUEPEDIA_PASSWORD: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

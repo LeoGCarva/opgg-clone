@@ -45,7 +45,7 @@ export async function loadProfile(
 
 export function RiotErrorBox({ error }: { error: RiotApiError }) {
   return (
-    <div className="rounded-md border border-red-900 bg-red-950/50 p-4 text-red-300">
+    <div className="border border-loss/40 bg-loss/10 p-4 text-loss">
       {error instanceof RiotAuthError
         ? "Chave da Riot inválida ou expirada. Gere outra no portal e atualize o .env."
         : `A API da Riot respondeu ${error.status}. Tente de novo em instantes.`}

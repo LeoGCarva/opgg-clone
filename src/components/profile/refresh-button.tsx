@@ -15,12 +15,12 @@ export function RefreshButton({ action }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium hover:bg-sky-500 disabled:opacity-50"
+        className="h-11 bg-ink px-5 text-[15px] font-semibold text-white hover:bg-ink-soft disabled:opacity-50"
       >
         {pending ? "Atualizando..." : "Atualizar"}
       </button>
-      {!pending && state.error && <p className="text-sm text-red-400">{state.error}</p>}
-      {!pending && state.message && <p className="text-sm text-zinc-400">{state.message}</p>}
+      {!pending && state.error && <p className="text-sm text-loss">{state.error}</p>}
+      {!pending && state.message && <p className="text-sm text-muted">{state.message}</p>}
     </form>
   );
 }

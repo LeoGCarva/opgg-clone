@@ -15,7 +15,7 @@ export function GameIcon({
   if (!src) {
     return (
       <span
-        className={`inline-block rounded bg-zinc-800 ${className}`}
+        className={`inline-block bg-divider ${className}`}
         style={{ width: size, height: size }}
       />
     );
@@ -27,7 +27,7 @@ export function GameIcon({
       title={alt}
       width={size}
       height={size}
-      className={`rounded ${className}`}
+      className={className}
     />
   );
 }

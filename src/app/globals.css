@@ -1,10 +1,67 @@
 @import "tailwindcss";
 
+/* Tokens do guia de estilo (canvas "Stats LoL — Tier list" › Guia de estilo). */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  /* base */
+  --color-ink: #0e0f0c;
+  --color-ink-soft: #3a3d35;
+  --color-canvas: #f1f2ee;
+  --color-surface: #ffffff;
+  --color-accent: #c8f031;
+  --color-muted: #5b5f57;
+  --color-on-ink: #c9ccc3;
+  --color-line: #dadcd5;
+  --color-line-strong: #c4c7be;
+  --color-divider: #e6e7e2;
+  --color-link: #2f5be0;
+
+  /* resultado */
+  --color-win: #11803f;
+  --color-loss: #c42a2a;
+
+  /* escalas de KDA e taxa de vitória */
+  --color-stat-orange: #c25a00;
+  --color-stat-blue: #2f5be0;
+  --color-stat-teal: #0f8a7a;
+
+  /* tiers da tier list (texto do selo sempre em ink) */
+  --color-tier-splus: #ff5a36;
+  --color-tier-s: #ff9f1c;
+  --color-tier-a: #4c7dff;
+  --color-tier-b: #2bb8a3;
+  --color-tier-c: #c4c7be;
+  --color-tier-d: #e0e2db;
+
+  /* elos: versão escura, para texto em fundo claro */
+  --color-elo-iron: #5e514c;
+  --color-elo-bronze: #7a4a28;
+  --color-elo-silver: #56616c;
+  --color-elo-gold: #8a6410;
+  --color-elo-platinum: #1d746a;
+  --color-elo-emerald: #137a4e;
+  --color-elo-diamond: #3a55c8;
+  --color-elo-master: #7e3aa8;
+  --color-elo-grandmaster: #a82c38;
+  --color-elo-challenger: #8a6a0a;
+
+  --shadow-hard: 8px 8px 0 #0e0f0c;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+@layer base {
+  h1 {
+    font-family: var(--font-display);
+    font-stretch: 125%;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
 }

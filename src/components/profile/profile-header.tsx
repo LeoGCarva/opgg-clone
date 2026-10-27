@@ -19,21 +19,21 @@ export function ProfileHeader({ account, version, now }: Props) {
           src={account.profileIconId ? ddragonUrl.profileIcon(version, account.profileIconId) : null}
           alt="Ícone de perfil"
           size={88}
-          className="rounded-xl"
+          className=""
         />
-        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-zinc-700 bg-zinc-950 px-2 text-xs">
+        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 border-2 border-ink bg-accent px-2 text-xs font-bold text-ink">
           {account.summonerLevel}
         </span>
       </div>
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold sm:text-3xl">
+        <h1 className="text-4xl sm:text-[56px]">
           {account.gameName}
-          <span className="font-normal text-zinc-500">#{account.tagLine}</span>
+          <span className="ml-2 font-sans text-2xl font-semibold normal-case tracking-normal text-muted">#{account.tagLine}</span>
         </h1>
         <div className="flex flex-wrap items-center gap-3">
           <RefreshButton action={refreshAction.bind(null, account.platform, account.puuid)} />
           {account.lastRefreshedAt && (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-muted">
               Atualizado {timeAgo(account.lastRefreshedAt, now)}
             </span>
           )}
