@@ -9,7 +9,7 @@ import { toRiotIdSlug } from "@/lib/riot/riot-id";
 import { isRegionSlug, platformFromSlug } from "@/lib/riot/routing";
 import { exactNameInput, findPlayersByName } from "@/lib/services/player-search";
 
-export const metadata: Metadata = { title: "Busca por jogador · opgg clone" };
+export const metadata: Metadata = { title: "Busca por jogador · rubra" };
 
 export default function SearchPage({ searchParams }: PageProps<"/search">) {
   return (

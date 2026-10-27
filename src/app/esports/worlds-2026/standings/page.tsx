@@ -15,7 +15,7 @@ import {
 } from "@/lib/esports/standings";
 import { getSchedule, load, tabLabel } from "@/lib/esports/worlds";
 
-export const metadata: Metadata = { title: "Worlds 2026 · Classificação · opgg clone" };
+export const metadata: Metadata = { title: "Worlds 2026 · Classificação · rubra" };
 
 export default function WorldsStandingsPage() {
   return (

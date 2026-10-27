@@ -8,7 +8,7 @@ import { env } from "@/env";
 // Quem chama deve fazer cache dos resultados.
 
 const API = "https://lol.fandom.com/api.php";
-const USER_AGENT = "opgg-clone-study/1.0 (https://github.com/LeoGCarva/opgg-clone)";
+const USER_AGENT = "rubra/1.0 (https://github.com/LeoGCarva/opgg-clone)";
 const PAGE_SIZE = 500; // máximo por requisição da Cargo
 const MAX_RETRIES = 4;
 
