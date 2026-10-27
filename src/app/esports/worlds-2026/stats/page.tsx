@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { WorldsListSkeleton } from "@/components/esports/skeletons";
 import { pct } from "@/components/esports/format";
 import { LeaguepediaErrorBox, pill, WorldsTabs } from "@/components/esports/worlds-tabs";
 import { formatDuration, winRateClass } from "@/components/profile/format";
@@ -26,7 +27,7 @@ export default function WorldsStatsPage({ searchParams }: Props) {
   return (
     <>
       <WorldsTabs active="stats" />
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<WorldsListSkeleton />}>
         <Stats searchParams={searchParams} />
       </Suspense>
     </>

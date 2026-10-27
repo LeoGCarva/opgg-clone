@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ChampionSkeleton } from "@/components/champions/skeletons";
 import { BracketTabs, RoleTabs } from "@/components/champions/filters";
 import { RunePage } from "@/components/champions/rune-page";
 import { TierBadge } from "@/components/champions/tier-badge";
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function ChampionPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<ChampionSkeleton />}>
         <ChampionContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { LeaderboardSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 import { pill } from "@/components/champions/filters";
 import { href, type Query } from "@/components/champions/href";
 import { RegionSelect } from "@/components/leaderboard/region-select";
@@ -35,7 +36,7 @@ const tierParam = (tier: LeaderboardTierSlug) => (tier === "desafiante" ? undefi
 export default function LeaderboardPage({ searchParams }: PageProps<"/leaderboard">) {
   return (
     <main className="flex-1">
-      <Suspense fallback={<div className="mx-auto mt-8 h-96 max-w-[1240px] animate-pulse bg-surface" />}>
+      <Suspense fallback={<LeaderboardSkeleton />}>
         <LeaderboardContent searchParams={searchParams} />
       </Suspense>
     </main>

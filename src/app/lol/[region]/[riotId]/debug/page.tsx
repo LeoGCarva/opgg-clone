@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { LoadingScreen } from "@/components/loading/loading-screen";
 import { JsonBlock } from "@/components/json-block";
 import { RiotApiError, RiotAuthError, RiotNotFoundError } from "@/lib/riot/client";
 import { riotApi } from "@/lib/riot/endpoints";
@@ -13,7 +14,7 @@ type Params = PageProps<"/lol/[region]/[riotId]/debug">["params"];
 export default function DebugPage({ params }: PageProps<"/lol/[region]/[riotId]/debug">) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <Suspense fallback={<ProfileSkeleton />}>
+      <Suspense fallback={<LoadingScreen label="Buscando o JSON na Riot…" />}>
         <ProfileData params={params} />
       </Suspense>
     </main>
@@ -142,16 +143,5 @@ function Section({
 function ErrorBox({ children }: { children: React.ReactNode }) {
   return (
     <div className="border border-loss/40 bg-loss/10 p-4 text-loss">{children}</div>
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="animate-pulse space-y-6">
-      <div className="h-9 w-64 bg-divider" />
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="h-32 bg-surface" />
-      ))}
-    </div>
   );
 }
