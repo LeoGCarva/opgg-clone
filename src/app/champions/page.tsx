@@ -52,8 +52,9 @@ async function TierListContent({ searchParams }: Pick<PageProps<"/champions">, "
   const params = await searchParams;
   const bracket = isGlobalBracket(params.bracket) ? params.bracket : "all";
   const role = isRole(params.role) ? params.role : undefined;
-  const view = params.view === "tiers" ? "tiers" : "table";
-  const viewQuery = view === "tiers" ? "tiers" : undefined;
+  // "Por tier" é o padrão (sem parâmetro); a tabela é `?view=table`.
+  const view = params.view === "table" ? "table" : "tiers";
+  const viewQuery = view === "table" ? "table" : undefined;
   const q = typeof params.q === "string" ? params.q.trim().slice(0, 40) : "";
   const tiers = parseTierFilter(params.tier);
   const sort: TierSort = isTierSort(params.ordem) ? params.ordem : "tier";

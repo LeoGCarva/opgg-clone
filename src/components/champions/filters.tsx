@@ -91,7 +91,7 @@ export function RoleTabs({
   );
 }
 
-/** Alternância Tabela / Por tier da tier list; ativo em acento. */
+/** Alternância Por tier (padrão) / Tabela da tier list; ativo em acento. */
 export function ViewToggle({
   basePath,
   active,
@@ -107,15 +107,15 @@ export function ViewToggle({
 }) {
   const bracketParam = bracket === "all" ? undefined : bracket;
   const views = [
-    { value: "table", label: "Tabela" },
     { value: "tiers", label: "Por tier" },
+    { value: "table", label: "Tabela" },
   ] as const;
   return (
     <nav aria-label="Visualização" className="flex border border-ink">
       {views.map((v) => (
         <Link
           key={v.value}
-          href={href(basePath, { ...query, bracket: bracketParam, role, view: v.value === "table" ? undefined : v.value })}
+          href={href(basePath, { ...query, bracket: bracketParam, role, view: v.value === "tiers" ? undefined : v.value })}
           aria-current={v.value === active ? "page" : undefined}
           className={`flex h-[42px] items-center px-4 text-sm font-semibold text-ink ${
             v.value === active ? "bg-accent" : "bg-surface hover:bg-canvas"
