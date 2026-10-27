@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ItemInfo } from "@/lib/ddragon";
-import { aggregateBuilds, buildKeys, skillMaxOrder, type GlobalBuildRow } from "@/lib/services/global-builds";
+import {
+  aggregateBuilds,
+  buildKeys,
+  MAX_OPTIONS_STORED,
+  skillMaxOrder,
+  type GlobalBuildRow,
+} from "@/lib/services/global-builds";
 import { assignTiers } from "@/lib/services/tiers";
 
 const item = (gold: number, tags: string[] = [], into?: string[]): ItemInfo => ({ name: "x", gold, tags, into });
@@ -14,6 +20,7 @@ const ITEMS: Record<number, ItemInfo> = {
   3046: item(2650),
   3094: item(2650),
   3072: item(3400),
+  3036: item(3000),
   3340: item(0, ["Trinket"]),
 };
 
@@ -29,6 +36,7 @@ function row(extra: Partial<GlobalBuildRow> = {}): GlobalBuildRow {
     startItems: [3340, 2003, 1055], // o totem deve ser ignorado
     keystoneId: 8005,
     secondaryStyleId: 8300,
+    runes: [8000, 8005, 9111, 9104, 8014, 8300, 8304, 8345, 5005, 5008, 5011],
     summoner1Id: 7,
     summoner2Id: 4,
     ...extra,
@@ -51,7 +59,8 @@ describe("buildKeys", () => {
       { kind: "start", key: "1055-2003" },
       { kind: "boots", key: "3006" },
       { kind: "core", key: "3031-3046-3094" }, // 3031 repetido conta uma vez
-      { kind: "runes", key: "8005-8300" },
+      { kind: "item4", key: "3072" },
+      { kind: "runes", key: "8000-8005-9111-9104-8014-8300-8304-8345-5005-5008-5011" },
       { kind: "spells", key: "4-7" },
       { kind: "skills", key: "1-3-2" },
       { kind: "skill_path", key: "1-3-1-2-1-4-1-3-1-3-4-3-3-2-2" },
@@ -62,9 +71,32 @@ describe("buildKeys", () => {
     const keys = buildKeys(row({ itemBuild: [1055, 3031] }), ITEMS);
     expect(keys.find((k) => k.kind === "core")).toBeUndefined();
   });
+
+  it("conta 4º, 5º e 6º itens separadamente", () => {
+    const keys = buildKeys(row({ itemBuild: [3031, 3046, 3094, 3072, 3006, 3036] }), ITEMS);
+    expect(keys.filter((k) => k.kind.startsWith("item"))).toEqual([
+      { kind: "item4", key: "3072" },
+      { kind: "item5", key: "3036" },
+    ]);
+  });
+
+  it("pula as runas sem página completa", () => {
+    expect(buildKeys(row({ runes: null }), ITEMS).find((k) => k.kind === "runes")).toBeUndefined();
+  });
 });
 
 describe("aggregateBuilds", () => {
+  it("guarda só as opções mais jogadas de cada tipo", () => {
+    // 8 feitiços diferentes; o par 4-7 aparece 3 vezes e deve ficar em primeiro.
+    const rows = [
+      ...Array.from({ length: 8 }, (_, i) => row({ summoner1Id: 100 + i, summoner2Id: 4 })),
+      row(), row(), row(),
+    ];
+    const spells = aggregateBuilds(rows, ITEMS).filter((a) => a.kind === "spells" && a.bracket === "all");
+    expect(spells).toHaveLength(MAX_OPTIONS_STORED);
+    expect(spells[0]).toMatchObject({ key: "4-7", games: 3 });
+  });
+
   it("conta no bracket da partida e em 'all'", () => {
     const agg = aggregateBuilds([row(), row({ win: false, bracket: "emerald" })], ITEMS);
     const runes = agg.filter((a) => a.kind === "runes");

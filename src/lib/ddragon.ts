@@ -13,12 +13,16 @@ export type ItemInfo = {
   into?: string[]; // ids dos itens em que ele evolui; ausente = item final
 };
 
+/** Árvore de runas com as fileiras na ordem do jogo (fileira 0 = keystones). */
+export type RuneTree = { id: number; name: string; image: string; slots: number[][] };
+
 export type StaticData = {
   version: string;
   champions: Record<number, Named>; // por championId (campo "key" do champion.json)
   spells: Record<number, Named>; // por summoner1Id/summoner2Id
   items: Record<number, ItemInfo>;
   runes: Record<number, Named>; // keystones e estilos, por id
+  runeTrees: RuneTree[];
   queues: Record<number, string>;
 };
 
@@ -108,6 +112,12 @@ export async function fetchStaticData(): Promise<StaticData> {
       ]),
     ),
     runes,
+    runeTrees: runeStyles.map((s) => ({
+      id: s.id,
+      name: s.name,
+      image: s.icon,
+      slots: s.slots.map((slot) => slot.runes.map((r) => r.id)),
+    })),
     queues,
   };
 }
@@ -120,6 +130,37 @@ export const ddragonUrl = {
   // Ícones de runa não são versionados.
   rune: (image: string) => `${DDRAGON}/cdn/img/${image}`,
 };
+
+// Fragmentos não estão no runesReforged.json; as fileiras são ataque, flex e defesa.
+const shard = (name: string, icon: string): Named => ({ name, image: `perk-images/StatMods/StatMods${icon}Icon.png` });
+export const STAT_SHARDS: Record<number, Named> = {
+  5008: shard("Força Adaptativa", "AdaptiveForce"),
+  5005: shard("Velocidade de Ataque", "AttackSpeed"),
+  5007: shard("Aceleração de Habilidade", "CDRScaling"),
+  5010: shard("Velocidade de Movimento", "MovementSpeed"),
+  5001: shard("Vida por nível", "HealthPlus"),
+  5011: shard("Vida", "HealthScaling"),
+  5013: shard("Tenacidade e Resistência a Lentidão", "Tenacity"),
+};
+export const STAT_SHARD_ROWS = [
+  [5008, 5005, 5007],
+  [5008, 5010, 5001],
+  [5011, 5013, 5001],
+];
+
+export type ChampionSpell = Named & { key: "Q" | "W" | "E" | "R" };
+
+/** Habilidades Q/W/E/R do campeão; `ddragonId` é o id do Data Dragon ("MonkeyKing"). */
+export async function getChampionSpells(ddragonId: string): Promise<ChampionSpell[]> {
+  "use cache";
+  cacheLife("days");
+  const [version] = await getJson<string[]>(`${DDRAGON}/api/versions.json`);
+  const json = await getJson<{ data: Record<string, { spells: { name: string; image: { full: string } }[] }> }>(
+    `${DDRAGON}/cdn/${version}/data/${LOCALE}/champion/${ddragonId}.json`,
+  );
+  const keys = ["Q", "W", "E", "R"] as const;
+  return json.data[ddragonId].spells.map((s, i) => ({ key: keys[i], name: s.name, image: s.image.full }));
+}
 
 /** Slug de URL do campeão: o id do Data Dragon em minúsculas ("MonkeyKing" → "monkeyking"). */
 export function championSlug(data: StaticData, championId: number): string | null {

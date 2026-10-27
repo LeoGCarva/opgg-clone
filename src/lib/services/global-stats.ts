@@ -100,7 +100,11 @@ export type ChampionDetails = {
 };
 
 const BUILD_OPTIONS_SHOWN = 3;
+// Páginas de runas ocupam bastante espaço com a árvore inteira.
+const RUNE_PAGES_SHOWN = 2;
+const BUILD_KINDS: BuildKind[] = ["start", "boots", "core", "item4", "item5", "item6", "runes", "spells", "skills", "skill_path"];
 const MIN_MATCHUP_GAMES = 3;
+const MIN_ROLE_GAMES = 50;
 
 export async function getChampionDetails(
   championId: number,
@@ -122,8 +126,10 @@ export async function getChampionDetails(
       and(eq(championStats.patch, patch), eq(championStats.bracket, bracket), eq(championStats.championId, championId)),
     )
     .orderBy(desc(championStats.games));
-  const roles = roleRows.filter((r) => isRole(r.role)) as { role: Role; games: number; wins: number }[];
-  if (!roles.length) return null;
+  const allRoles = roleRows.filter((r) => isRole(r.role)) as { role: Role; games: number; wins: number }[];
+  if (!allRoles.length) return null;
+  // Rotas com poucas partidas (off-role) só poluem as abas; a principal fica mesmo abaixo do mínimo.
+  const roles = allRoles.filter((r, i) => i === 0 || r.games >= MIN_ROLE_GAMES);
 
   const current = roles.find((r) => r.role === requestedRole) ?? roles[0];
   const role = current.role;
@@ -156,10 +162,10 @@ export async function getChampionDetails(
   ]);
 
   const builds = {} as Record<BuildKind, BuildOption[]>;
-  for (const kind of ["start", "boots", "core", "runes", "spells", "skills", "skill_path"] as BuildKind[]) {
+  for (const kind of BUILD_KINDS) {
     builds[kind] = buildRows
       .filter((b) => b.kind === kind)
-      .slice(0, BUILD_OPTIONS_SHOWN)
+      .slice(0, kind === "runes" ? RUNE_PAGES_SHOWN : BUILD_OPTIONS_SHOWN)
       .map(({ key, games, wins }) => ({ key, games, wins }));
   }
 

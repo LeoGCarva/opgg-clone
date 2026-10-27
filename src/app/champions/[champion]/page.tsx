@@ -3,10 +3,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { BracketTabs, RoleTabs } from "@/components/champions/filters";
+import { RunePage } from "@/components/champions/rune-page";
 import { TierBadge } from "@/components/champions/tier-badge";
 import { roleLabel, winRate, winRateClass } from "@/components/profile/format";
 import { GameIcon } from "@/components/profile/game-icon";
-import { championIdBySlug, championSlug, ddragonUrl, getStaticData, type StaticData } from "@/lib/ddragon";
+import {
+  championIdBySlug,
+  championSlug,
+  ddragonUrl,
+  getChampionSpells,
+  getStaticData,
+  type ChampionSpell,
+  type StaticData,
+} from "@/lib/ddragon";
 import {
   BRACKET_SCOPE,
   getChampionDetails,
@@ -37,6 +46,7 @@ export default function ChampionPage({ params, searchParams }: Props) {
 }
 
 const SKILL_KEYS: Record<string, string> = { "1": "Q", "2": "W", "3": "E", "4": "R" };
+const RUNE_PAGE_LENGTH = 11; // ver runePage() em match-mapper.ts
 const pct = (games: number, total: number) => `${((games / total) * 100).toFixed(1)}%`;
 
 async function ChampionContent({ params, searchParams }: Pick<Props, "params" | "searchParams">) {
@@ -46,8 +56,12 @@ async function ChampionContent({ params, searchParams }: Pick<Props, "params" | 
   if (!championId) notFound();
 
   const bracket = isGlobalBracket(bracketParam) ? bracketParam : "all";
-  const details = await getChampionDetails(championId, bracket, isRole(roleParam) ? roleParam : undefined);
   const champion = data.champions[championId];
+  const [details, spells] = await Promise.all([
+    getChampionDetails(championId, bracket, isRole(roleParam) ? roleParam : undefined),
+    // Sem ícones das habilidades a página ainda funciona (cai nas letras).
+    getChampionSpells(champion.image.replace(/\.png$/, "")).catch(() => null),
+  ]);
   const basePath = `/champions/${slug}`;
 
   return (
@@ -93,13 +107,21 @@ async function ChampionContent({ params, searchParams }: Pick<Props, "params" | 
           Sem partidas de {champion.name} coletadas nesse elo ainda.
         </p>
       ) : (
-        <ChampionBuild details={details} data={data} />
+        <ChampionBuild details={details} data={data} spells={spells} />
       )}
     </div>
   );
 }
 
-function ChampionBuild({ details, data }: { details: ChampionDetails; data: StaticData }) {
+function ChampionBuild({
+  details,
+  data,
+  spells,
+}: {
+  details: ChampionDetails;
+  data: StaticData;
+  spells: ChampionSpell[] | null;
+}) {
   const { builds, games } = details;
   const v = data.version;
   const item = (id: number) => (
@@ -107,47 +129,51 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
   );
   const ids = (key: string) => key.split("-").map(Number);
   const sortedMatchups = [...details.matchups].sort((a, b) => b.wins / b.games - a.wins / a.games);
+  // Agregações antigas guardavam só "keystone-árvore"; só desenha páginas completas.
+  const runePages = builds.runes.filter((o) => ids(o.key).length === RUNE_PAGE_LENGTH);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card title="Runas">
-        <Options options={builds.runes} total={games} render={(key) => {
-          const [keystoneId, styleId] = ids(key);
-          const keystone = data.runes[keystoneId];
-          const style = data.runes[styleId];
-          return (
-            <span className="flex items-center gap-2">
-              {keystone && <GameIcon src={ddragonUrl.rune(keystone.image)} alt={keystone.name} size={36} className="bg-ink" />}
-              {style && <GameIcon src={ddragonUrl.rune(style.image)} alt={style.name} size={24} className="bg-ink p-0.5" />}
-              <span className="text-sm text-ink-soft">{keystone?.name}</span>
+      <Card title="Runas" className="lg:col-span-2">
+        {runePages.length ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {runePages.map((o) => (
+              <div key={o.key} className="space-y-3 border border-line p-3">
+                <OptionStats option={o} total={games} inline />
+                <RunePage page={ids(o.key)} data={data} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted">Sem dados suficientes</p>
+        )}
+      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:col-span-2">
+        <Card title="Feitiços">
+          <Options options={builds.spells} total={games} render={(key) => (
+            <span className="flex gap-1">
+              {ids(key).map((id) => {
+                const spell = data.spells[id];
+                return <GameIcon key={id} src={spell ? ddragonUrl.spell(v, spell.image) : null} alt={spell?.name ?? "Feitiço"} size={36} />;
+              })}
             </span>
-          );
-        }} />
-      </Card>
+          )} />
+        </Card>
 
-      <Card title="Feitiços">
-        <Options options={builds.spells} total={games} render={(key) => (
-          <span className="flex gap-1">
-            {ids(key).map((id) => {
-              const spell = data.spells[id];
-              return <GameIcon key={id} src={spell ? ddragonUrl.spell(v, spell.image) : null} alt={spell?.name ?? "Feitiço"} size={36} />;
-            })}
-          </span>
-        )} />
-      </Card>
+        <Card title="Itens iniciais">
+          <Options options={builds.start} total={games} render={(key) => <span className="flex gap-1">{ids(key).map((id, i) => <span key={i}>{item(id)}</span>)}</span>} />
+        </Card>
 
-      <Card title="Itens iniciais">
-        <Options options={builds.start} total={games} render={(key) => <span className="flex gap-1">{ids(key).map((id, i) => <span key={i}>{item(id)}</span>)}</span>} />
-      </Card>
-
-      <Card title="Bota">
-        <Options options={builds.boots} total={games} render={(key) => (
-          <span className="flex items-center gap-2">
-            {item(Number(key))}
-            <span className="text-sm text-ink-soft">{data.items[Number(key)]?.name}</span>
-          </span>
-        )} />
-      </Card>
+        <Card title="Bota">
+          <Options options={builds.boots} total={games} render={(key) => (
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0">{item(Number(key))}</span>
+              <span className="truncate text-sm text-ink-soft">{data.items[Number(key)]?.name}</span>
+            </span>
+          )} />
+        </Card>
+      </div>
 
       <Card title="Build principal (3 primeiros itens)" className="lg:col-span-2">
         <Options options={builds.core} total={games} render={(key) => (
@@ -160,20 +186,32 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
             ))}
           </span>
         )} />
+        <div className="grid grid-cols-1 gap-4 border-t border-line pt-3 sm:grid-cols-3">
+          {(["item4", "item5", "item6"] as const).map((kind, i) => (
+            <div key={kind} className="min-w-0 space-y-2">
+              <h3 className="text-xs text-muted">{i + 4}º item</h3>
+              <Options options={builds[kind]} total={games} render={(key) => item(Number(key))} />
+            </div>
+          ))}
+        </div>
       </Card>
 
       <Card title="Habilidades" className="lg:col-span-2">
-        <Options options={builds.skills} total={games} render={(key) => (
-          <span className="flex items-center gap-1.5 font-mono font-bold">
-            {key.split("-").map((slot, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-muted">›</span>}
-                <span className="bg-divider px-2 py-1">{SKILL_KEYS[slot]}</span>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-8">
+          <div className="lg:w-72 lg:shrink-0">
+            <Options options={builds.skills} total={games} render={(key) => (
+              <span className="flex items-center gap-1.5 font-mono font-bold">
+                {key.split("-").map((slot, i) => (
+                  <span key={i} className="flex items-center gap-1.5">
+                    {i > 0 && <span className="text-muted">›</span>}
+                    <SkillIcon slot={slot} spells={spells} version={v} size={36} />
+                  </span>
+                ))}
               </span>
-            ))}
-          </span>
-        )} />
-        {builds.skill_path[0] && <SkillPath path={builds.skill_path[0].key} />}
+            )} />
+          </div>
+          {builds.skill_path[0] && <SkillPath path={builds.skill_path[0].key} spells={spells} version={v} />}
+        </div>
       </Card>
 
       <Card title="Bom contra">
@@ -212,28 +250,58 @@ function Options({ options, total, render }: { options: BuildOption[]; total: nu
       {options.map((o) => (
         <li key={o.key} className="flex items-center justify-between gap-4">
           {render(o.key)}
-          <span className="shrink-0 text-right text-xs">
-            <span className={winRateClass(winRate(o.wins, o.games - o.wins))}>{winRate(o.wins, o.games - o.wins)}% WR</span>
-            <span className="block text-muted">
-              {pct(o.games, total)} · {o.games} jogos
-            </span>
-          </span>
+          <OptionStats option={o} total={total} />
         </li>
       ))}
     </ul>
   );
 }
 
+function OptionStats({ option: o, total, inline = false }: { option: BuildOption; total: number; inline?: boolean }) {
+  const wr = winRate(o.wins, o.games - o.wins);
+  return (
+    <span className={`shrink-0 text-xs ${inline ? "flex justify-between" : "text-right"}`}>
+      <span className={winRateClass(wr)}>{wr}% WR</span>
+      <span className={`text-muted ${inline ? "" : "block"}`}>
+        {pct(o.games, total)} · {o.games} jogos
+      </span>
+    </span>
+  );
+}
+
+/** Ícone da habilidade com a tecla no canto; sem dados do Data Dragon, só a letra. */
+function SkillIcon({ slot, spells, version, size }: { slot: string; spells: ChampionSpell[] | null; version: string; size: number }) {
+  const key = SKILL_KEYS[slot];
+  const spell = spells?.find((s) => s.key === key);
+  if (!spell) {
+    return (
+      <span className="flex items-center justify-center bg-divider font-mono font-bold" style={{ width: size, height: size }}>
+        {key}
+      </span>
+    );
+  }
+  return (
+    <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>
+      <GameIcon src={ddragonUrl.spell(version, spell.image)} alt={`${key} · ${spell.name}`} size={size} />
+      <span className="absolute right-0 bottom-0 bg-ink px-0.5 font-mono text-[10px] leading-tight font-bold text-white">
+        {key}
+      </span>
+    </span>
+  );
+}
+
 /** Grade de 15 níveis com a skill escolhida em cada um. */
-function SkillPath({ path }: { path: string }) {
+function SkillPath({ path, spells, version }: { path: string; spells: ChampionSpell[] | null; version: string }) {
   const levels = path.split("-");
   return (
-    <div className="overflow-x-auto pt-2">
+    <div className="min-w-0 overflow-x-auto">
       <table className="text-center font-mono text-xs">
         <tbody>
           {["1", "2", "3", "4"].map((slot) => (
             <tr key={slot}>
-              <th className="pr-2 text-muted">{SKILL_KEYS[slot]}</th>
+              <th className="pr-2">
+                <SkillIcon slot={slot} spells={spells} version={version} size={24} />
+              </th>
               {levels.map((s, i) => (
                 <td key={i} className="p-0.5">
                   <span

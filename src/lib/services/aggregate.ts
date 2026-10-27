@@ -15,6 +15,31 @@ import { aggregateBuilds } from "./global-builds";
 const REMAKE_MAX_SECONDS = 210;
 const INSERT_CHUNK = 1000;
 
+// Partidas salvas antes da coluna `runes` não têm a página completa; ela é lida do JSON bruto
+// aqui em vez de num backfill (reescrever todas as linhas estoura o limite de espaço do Neon).
+// Mesma ordem de `runePage()` em match-mapper.ts.
+const RUNES_FROM_RAW = sql`(
+  select case
+    when jsonb_array_length(st.pri->'selections') = 4 and jsonb_array_length(st.sub->'selections') = 2
+      and p->'perks'->'statPerks' is not null
+    then array[
+      (st.pri->>'style')::int,
+      (st.pri->'selections'->0->>'perk')::int, (st.pri->'selections'->1->>'perk')::int,
+      (st.pri->'selections'->2->>'perk')::int, (st.pri->'selections'->3->>'perk')::int,
+      (st.sub->>'style')::int,
+      (st.sub->'selections'->0->>'perk')::int, (st.sub->'selections'->1->>'perk')::int,
+      (p->'perks'->'statPerks'->>'offense')::int, (p->'perks'->'statPerks'->>'flex')::int,
+      (p->'perks'->'statPerks'->>'defense')::int
+    ] end
+  from jsonb_array_elements(${matches.raw}->'info'->'participants') p
+  cross join lateral (
+    select
+      (select s from jsonb_array_elements(p->'perks'->'styles') s where s->>'description' = 'primaryStyle') as pri,
+      (select s from jsonb_array_elements(p->'perks'->'styles') s where s->>'description' = 'subStyle') as sub
+  ) st
+  where p->>'puuid' = ${mp.puuid}
+)`;
+
 /** Patch mais recente com partidas do coletor. */
 export async function latestCollectedPatch(): Promise<string | null> {
   const [row] = await db()
@@ -51,6 +76,7 @@ export async function aggregatePatch(patch: string) {
       startItems: mp.startItems,
       keystoneId: mp.keystoneId,
       secondaryStyleId: mp.secondaryStyleId,
+      runes: sql<number[] | null>`coalesce(${mp.runes}, ${RUNES_FROM_RAW})`,
       summoner1Id: mp.summoner1Id,
       summoner2Id: mp.summoner2Id,
     })
