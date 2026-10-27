@@ -1,9 +1,10 @@
-import { and, desc, eq, inArray, min, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, min, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { accounts, leagueEntries, matches, matchParticipants } from "@/lib/db/schema";
+import { accounts, leagueEntries, lpHistory, matches, matchParticipants } from "@/lib/db/schema";
 import { riotApi } from "@/lib/riot/endpoints";
 import type { RiotId } from "@/lib/riot/riot-id";
 import type { Platform } from "@/lib/riot/routing";
+import { LP_HISTORY_DAYS, LP_HISTORY_QUEUES, shouldRecord, type LpPoint } from "./lp-history";
 import { matchToRows } from "./match-mapper";
 import { saveMatches } from "./match-store";
 
@@ -93,6 +94,31 @@ export async function refreshProfile(platform: Platform, target: RefreshTarget) 
         })),
       );
     }
+
+    // Histórico de PDL: uma foto por fila ranqueada, só quando algo mudou desde a última.
+    const ranked = leagues.filter((l) => (LP_HISTORY_QUEUES as readonly string[]).includes(l.queueType));
+    if (ranked.length) {
+      const latest = await tx
+        .selectDistinctOn([lpHistory.queueType])
+        .from(lpHistory)
+        .where(eq(lpHistory.puuid, puuid))
+        .orderBy(lpHistory.queueType, desc(lpHistory.recordedAt));
+      const previous = new Map(latest.map((row) => [row.queueType, row]));
+      const changed = ranked.filter((l) => shouldRecord(previous.get(l.queueType), l));
+      if (changed.length) {
+        await tx.insert(lpHistory).values(
+          changed.map((l) => ({
+            puuid,
+            queueType: l.queueType,
+            tier: l.tier,
+            rank: l.rank,
+            leaguePoints: l.leaguePoints,
+            wins: l.wins,
+            losses: l.losses,
+          })),
+        );
+      }
+    }
   });
 
   const newMatches = await storeMatches(platform, matchIds);
@@ -154,8 +180,14 @@ export async function getProfile(
   if (!account) return null;
 
   const queueId = QUEUE_FILTERS[queue];
-  const [leagues, mine] = await Promise.all([
+  const historySince = new Date(Date.now() - LP_HISTORY_DAYS * 24 * 3600 * 1000);
+  const [leagues, history, mine] = await Promise.all([
     d.select().from(leagueEntries).where(eq(leagueEntries.puuid, account.puuid)),
+    d
+      .select()
+      .from(lpHistory)
+      .where(and(eq(lpHistory.puuid, account.puuid), gte(lpHistory.recordedAt, historySince)))
+      .orderBy(asc(lpHistory.recordedAt)),
     d
       .select({ me: matchParticipants, gameDuration: matches.gameDuration })
       .from(matchParticipants)
@@ -189,7 +221,11 @@ export async function getProfile(
     participants: byMatch.get(me.matchId) ?? [],
   }));
 
-  return { account, leagues, matches: profileMatches };
+  // Fotos dos últimos 30 dias por fila, em ordem cronológica (gráfico do card de ranqueada).
+  const lpHistoryByQueue: Record<string, LpPoint[]> = {};
+  for (const row of history) (lpHistoryByQueue[row.queueType] ??= []).push(row);
+
+  return { account, leagues, lpHistory: lpHistoryByQueue, matches: profileMatches };
 }
 
 export async function getLastRefreshedAt(puuid: string): Promise<Date | null> {

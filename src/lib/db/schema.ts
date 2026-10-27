@@ -59,6 +59,24 @@ export const leagueEntries = pgTable(
   (t) => [primaryKey({ columns: [t.puuid, t.queueType] })],
 );
 
+/** Uma foto do elo a cada "Atualizar" em que algo mudou. Alimenta o gráfico de PDL do card de ranqueada. */
+export const lpHistory = pgTable(
+  "lp_history",
+  {
+    puuid: text()
+      .notNull()
+      .references(() => accounts.puuid, { onDelete: "cascade" }),
+    queueType: text().notNull(),
+    recordedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    tier: text().notNull(),
+    rank: text().notNull(),
+    leaguePoints: integer().notNull(),
+    wins: integer().notNull(),
+    losses: integer().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.puuid, t.queueType, t.recordedAt] })],
+);
+
 /** Partidas são imutáveis: baixadas uma vez e guardadas para sempre. */
 export const matches = pgTable(
   "matches",
