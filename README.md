@@ -54,6 +54,8 @@ pnpm aggregate          # recalcula as estatísticas do patch mais recente colet
 | `pnpm db:generate` · `db:migrate` · `db:studio` | Drizzle |
 | `pnpm riot:smoke ["Nome#TAG"] [br]` | testa a chave da Riot |
 | `pnpm collect [br] [minutos]` · `pnpm aggregate [patch]` | estatísticas globais |
+| `pnpm db:prune [--yes]` | apaga partidas do coletor de patches antigos (mantém os 3 últimos) |
+| `pnpm db:slim-matches export \| restore <arquivo>` | reconstrução única de `matches` com o JSON enxuto (backup em `.backup/`) |
 
 ## Estrutura
 

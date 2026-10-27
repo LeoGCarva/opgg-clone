@@ -77,7 +77,7 @@ export const lpHistory = pgTable(
   (t) => [primaryKey({ columns: [t.puuid, t.queueType, t.recordedAt] })],
 );
 
-/** Partidas são imutáveis: baixadas uma vez e guardadas para sempre. */
+/** Partidas são imutáveis: baixadas uma vez; as do coletor de patches antigos saem com `pnpm db:prune`. */
 export const matches = pgTable(
   "matches",
   {
@@ -88,7 +88,7 @@ export const matches = pgTable(
     patch: text().notNull(),
     gameCreation: timestamp({ withTimezone: true }).notNull(),
     gameDuration: integer().notNull(),
-    // JSON completo da Riot, para reprocessar no futuro sem gastar requisições.
+    // JSON da Riot sem `challenges`/`missions` (ver slimMatch), para reprocessar sem gastar requisições.
     raw: jsonb().$type<MatchDto>().notNull(),
     // Preenchidos só pelo coletor (Fase B): elo do jogador-semente e se a timeline foi processada.
     tierBracket: text(),

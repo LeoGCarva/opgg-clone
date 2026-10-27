@@ -162,12 +162,16 @@ Nomes de colunas em snake_case. Conexão em `src/lib/db/index.ts` (pool no `glob
 ### Tabelas de partidas (compartilhadas por perfil e coletor)
 | Tabela | Chave | Colunas principais | Índices |
 |---|---|---|---|
-| `matches` | `match_id` | `platform`, `queue_id`, `game_version`, `patch`, `game_creation`, `game_duration`, `raw` (JSON completo da Riot), `tier_bracket`, `has_timeline` | `(queue_id, patch)`; `(patch, tier_bracket) WHERE has_timeline` |
+| `matches` | `match_id` | `platform`, `queue_id`, `game_version`, `patch`, `game_creation`, `game_duration`, `raw` (JSON da Riot sem `challenges`/`missions` dos participantes), `tier_bracket`, `has_timeline` | `(queue_id, patch)`; `(patch, tier_bracket) WHERE has_timeline` |
 | `match_participants` | `(match_id, puuid)` | time, Riot ID, campeão, nível, rota (`team_position`), vitória, K/D/A, `cs`, ouro, dano, visão, `items[7]`, feitiços, `keystone_id`, `secondary_style_id`, `runes[]` (página completa: árvore, 4 runas, árvore, 2 runas, 3 fragmentos; null em linhas antigas), `item_build[]`, `skill_order[]`, `start_items[]` (estes três só do coletor), `queue_id` e `game_creation` copiados | histórico `(puuid, game_creation desc)`; prefixo `lower(riot_id_game_name) text_pattern_ops` |
 | `match_bans` | `(match_id, team_id, pick_turn)` | `champion_id` | — |
 
-Partidas são imutáveis: baixadas uma vez e guardadas para sempre (o `raw` permite reprocessar
-sem gastar requisições). `match_participants` e `match_bans` apagam em cascata com a partida.
+Partidas são imutáveis: baixadas uma vez (o `raw` permite reprocessar sem gastar requisições).
+`slimMatch()` tira `challenges` e `missions` antes de salvar — metade do JSON, e o site não usa.
+`pnpm db:prune` apaga partidas do coletor de patches fora dos 3 mais recentes, exceto as que têm
+jogador com perfil no site, e as estatísticas derivadas desses patches. `pnpm db:slim-matches`
+(export → restore) é a reconstrução única que enxugou as partidas antigas: o Postgres não devolve
+espaço ao Neon com UPDATE/DELETE. `match_participants` e `match_bans` apagam em cascata com a partida.
 
 ### Tabelas do coletor e do agregador
 | Tabela | Chave | Conteúdo |
