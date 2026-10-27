@@ -9,6 +9,7 @@ export type SearchSuggestion = {
   tagLine: string;
   iconUrl: string | null;
   detail: string | null; // "Desafiante · 3575 PDL", "Nível 123" ou null
+  tier: string | null; // tier da Solo/Duo (ícone do elo)
 };
 
 /** Autocomplete da busca: GET /api/search?q=yuk&region=br */
@@ -25,6 +26,7 @@ export async function GET(request: NextRequest) {
     tagLine: p.tagLine,
     iconUrl: p.profileIconId ? ddragonUrl.profileIcon(data.version, p.profileIconId) : null,
     detail: playerDetail(p),
+    tier: p.tier,
   }));
 
   return Response.json(

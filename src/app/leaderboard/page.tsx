@@ -5,6 +5,7 @@ import { pill } from "@/components/champions/filters";
 import { href, type Query } from "@/components/champions/href";
 import { RegionSelect } from "@/components/leaderboard/region-select";
 import { tierLabel } from "@/components/profile/format";
+import { TierIcon } from "@/components/profile/tier-icon";
 import { GameIcon } from "@/components/profile/game-icon";
 import { ddragonUrl, getStaticData } from "@/lib/ddragon";
 import { RiotApiError } from "@/lib/riot/client";
@@ -150,8 +151,9 @@ function Header({
                 key={t.label}
                 href={href(BASE, { region: regionParam, tier: tierParam(t.slug) })}
                 aria-current={t.slug === tier ? "page" : undefined}
-                className={pill(t.slug === tier)}
+                className={`${pill(t.slug === tier)} gap-2`}
               >
+                <TierIcon tier={LEADERBOARD_TIERS[t.slug]} size={20} />
                 {t.label}
               </Link>
             ))}
@@ -221,7 +223,10 @@ function LeaderboardTable({
                           {name.gameName}
                           <span className="font-medium text-muted">#{name.tagLine}</span>
                         </span>
-                        <span className="block text-[13px] text-muted sm:hidden">{tierLabel(e.tier, "")}</span>
+                        <span className="flex items-center gap-1 text-[13px] text-muted sm:hidden">
+                          <TierIcon tier={e.tier} size={14} />
+                          {tierLabel(e.tier, "")}
+                        </span>
                       </span>
                     </Link>
                   ) : (
@@ -233,7 +238,12 @@ function LeaderboardTable({
                     </span>
                   )}
                 </td>
-                <td className="hidden sm:table-cell">{tierLabel(e.tier, "")}</td>
+                <td className="hidden sm:table-cell">
+                  <span className="flex items-center gap-2">
+                    <TierIcon tier={e.tier} size={22} />
+                    {tierLabel(e.tier, "")}
+                  </span>
+                </td>
                 <td className="text-right font-display font-extrabold">{e.leaguePoints.toLocaleString("pt-BR")}</td>
                 <td className="hidden text-right text-muted sm:table-cell">
                   <span className="text-win">{e.wins}</span> / <span className="text-loss">{e.losses}</span>

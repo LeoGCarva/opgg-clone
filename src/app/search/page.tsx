@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { playerDetail } from "@/components/profile/format";
 import { GameIcon } from "@/components/profile/game-icon";
+import { TierIcon } from "@/components/profile/tier-icon";
 import { ddragonUrl, getStaticData } from "@/lib/ddragon";
 import { toRiotIdSlug } from "@/lib/riot/riot-id";
 import { isRegionSlug, platformFromSlug } from "@/lib/riot/routing";
@@ -74,7 +75,12 @@ async function SearchResults({ searchParams }: Pick<PageProps<"/search">, "searc
                       {p.gameName}
                       <span className="font-medium text-muted">#{p.tagLine}</span>
                     </span>
-                    {detail && <span className="block text-[13px] text-muted">{detail}</span>}
+                    {detail && (
+                      <span className="flex items-center gap-1 text-[13px] text-muted">
+                        {p.tier && <TierIcon tier={p.tier} size={14} />}
+                        {detail}
+                      </span>
+                    )}
                   </span>
                   {p.hasProfile && (
                     <span className="shrink-0 border border-line-strong px-2 py-0.5 text-xs font-semibold">Perfil salvo</span>

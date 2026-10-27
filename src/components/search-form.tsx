@@ -5,6 +5,7 @@ import { useActionState, useId, useState } from "react";
 import { searchPlayer, type SearchState } from "@/app/actions";
 import { toRiotIdSlug } from "@/lib/riot/riot-id";
 import { REGION_SLUGS } from "@/lib/riot/routing";
+import { TierIcon } from "./profile/tier-icon";
 import { removeRecentSearch, useRecentSearches, type RecentSearch } from "./recent-searches";
 import { usePlayerSuggestions } from "./use-player-suggestions";
 
@@ -14,6 +15,7 @@ type Option = {
   region: string;
   iconUrl: string | null;
   detail: string | null;
+  tier?: string | null;
   recent?: RecentSearch;
 };
 
@@ -119,10 +121,13 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
               id={listId}
               role="listbox"
               aria-label={showingRecent ? "Buscas recentes" : "Sugestões de jogadores"}
-              className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+              // No header o campo é estreito: a lista cresce para a esquerda para caber nome + elo.
+              className={`absolute top-full right-0 z-20 mt-1 overflow-hidden border-2 border-ink bg-surface py-1 text-ink shadow-hard ${
+                compact ? "w-[min(26rem,calc(100vw-3rem))]" : "left-0"
+              }`}
             >
               {showingRecent && (
-                <li role="presentation" className="px-3 py-1 text-xs text-zinc-500">
+                <li role="presentation" className="px-3 py-1 text-xs text-muted">
                   Buscas recentes
                 </li>
               )}
@@ -150,9 +155,14 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
                   )}
                   <span className="min-w-0 flex-1 truncate">
                     {o.gameName}
-                    <span className="text-zinc-500">#{o.tagLine}</span>
+                    <span className="text-muted">#{o.tagLine}</span>
                   </span>
-                  {o.detail && <span className="shrink-0 text-xs text-zinc-500">{o.detail}</span>}
+                  {o.detail && (
+                    <span className="flex shrink-0 items-center gap-1 text-xs text-muted">
+                      {o.tier && <TierIcon tier={o.tier} size={14} />}
+                      {o.detail}
+                    </span>
+                  )}
                   {o.recent && (
                     <button
                       type="button"
