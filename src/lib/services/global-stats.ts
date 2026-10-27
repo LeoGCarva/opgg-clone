@@ -104,6 +104,7 @@ const BUILD_OPTIONS_SHOWN = 3;
 const RUNE_PAGES_SHOWN = 2;
 const BUILD_KINDS: BuildKind[] = ["start", "boots", "core", "item4", "item5", "item6", "runes", "spells", "skills", "skill_path"];
 const MIN_MATCHUP_GAMES = 3;
+const MIN_ROLE_GAMES = 50;
 
 export async function getChampionDetails(
   championId: number,
@@ -125,8 +126,10 @@ export async function getChampionDetails(
       and(eq(championStats.patch, patch), eq(championStats.bracket, bracket), eq(championStats.championId, championId)),
     )
     .orderBy(desc(championStats.games));
-  const roles = roleRows.filter((r) => isRole(r.role)) as { role: Role; games: number; wins: number }[];
-  if (!roles.length) return null;
+  const allRoles = roleRows.filter((r) => isRole(r.role)) as { role: Role; games: number; wins: number }[];
+  if (!allRoles.length) return null;
+  // Rotas com poucas partidas (off-role) só poluem as abas; a principal fica mesmo abaixo do mínimo.
+  const roles = allRoles.filter((r, i) => i === 0 || r.games >= MIN_ROLE_GAMES);
 
   const current = roles.find((r) => r.role === requestedRole) ?? roles[0];
   const role = current.role;

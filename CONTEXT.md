@@ -119,7 +119,7 @@ layout responsivo (celular e desktop).
 | `/esports/worlds-2026/match/[matchId]` | **Série.** Placar, abas por jogo (`?jogo=N`); por lado: vitória/derrota, abates, ouro, torres, dragões, barões, arautos, vastilarvas, bans; os 5 jogadores com campeão, feitiços, runa principal + árvore secundária, KDA, CS/min, ouro, barra de dano e 6 itens + trinket. |
 | `/esports/worlds-2026/standings` | **Classificação.** Tabela da fase suíça (V-D, resultados, situação), chave do mata-mata, Play-In e rodadas da suíça em colunas. |
 | `/esports/worlds-2026/stats` | **Estatísticas.** Cartões de resumo e tabela de campeões (presença, escolhas, bans, WR, KDA) ordenável por `?ordem=`; o campeão linka para a página dele. |
-| `/champions/[champion]` | **Página do campeão.** Tier, WR, pick, ban e partidas; abas das rotas em que é jogado e de elo; 2 páginas de runas com a árvore inteira (escolhidas acesas, demais apagadas, + fragmentos), feitiços, itens iniciais, bota, build principal (3 itens em ordem) + opções de 4º/5º/6º item, ordem de habilidades com ícones + grade dos 15 níveis, "bom contra" e "difícil contra". |
+| `/champions/[champion]` | **Página do campeão.** Tier, WR, pick, ban e partidas; abas das rotas em que é jogado (na ordem Topo → Suporte; só rotas com 50+ partidas, a principal sempre aparece) e de elo; 2 páginas de runas com a árvore inteira (escolhidas acesas, demais apagadas, + fragmentos), feitiços, itens iniciais, bota, build principal (3 itens em ordem) + opções de 4º/5º/6º item, ordem de habilidades com ícones + grade dos 15 níveis, "bom contra" e "difícil contra". |
 
 Páginas de jogador inexistente mostram "Jogador não encontrado"; erros da Riot (chave
 expirada, indisponibilidade) aparecem numa caixa de erro em vez de quebrar a página.
