@@ -63,14 +63,18 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <form action={action} className={compact ? "w-full sm:max-w-md sm:flex-1" : "w-full max-w-xl"}>
-      <div className="flex gap-2">
+    <form action={action} className={compact ? "w-full sm:w-[340px]" : "w-full"}>
+      <div className={`flex ${compact ? "border border-ink-soft" : "border-2 border-ink bg-surface shadow-hard"}`}>
         <select
           name="region"
           value={region}
           onChange={(e) => setRegion(e.target.value)}
           aria-label="Região"
-          className="rounded-md border border-zinc-700 bg-zinc-900 px-2 text-sm uppercase"
+          className={
+            compact
+              ? "border-r border-ink-soft bg-ink px-2 text-sm text-white uppercase outline-none"
+              : "border-r-2 border-ink bg-canvas px-4 font-display text-base font-extrabold uppercase outline-none"
+          }
         >
           {REGION_SLUGS.map((slug) => (
             <option key={slug} value={slug}>
@@ -105,8 +109,8 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
             aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
             autoComplete="off"
             required
-            className={`w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 outline-none focus:border-sky-500 ${
-              compact ? "py-1.5 text-sm" : "py-3"
+            className={`w-full bg-transparent outline-none focus-visible:bg-accent/20 ${
+              compact ? "h-10 px-3 text-sm text-white placeholder:text-on-ink" : "h-16 px-5 text-lg placeholder:text-muted"
             }`}
           />
 
@@ -135,14 +139,14 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
                   }}
                   onMouseEnter={() => setActive(i)}
                   className={`flex cursor-pointer items-center gap-2.5 px-3 py-1.5 text-sm ${
-                    i === active ? "bg-zinc-800" : ""
+                    i === active ? "bg-accent" : ""
                   }`}
                 >
                   {o.iconUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- ícone de 24px do CDN, sem otimização
-                    <img src={o.iconUrl} alt="" width={24} height={24} className="rounded" />
+                    <img src={o.iconUrl} alt="" width={24} height={24} className="" />
                   ) : (
-                    <span className="size-6 rounded bg-zinc-800" />
+                    <span className="size-6 bg-divider" />
                   )}
                   <span className="min-w-0 flex-1 truncate">
                     {o.gameName}
@@ -159,7 +163,7 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
                         e.stopPropagation();
                         removeRecentSearch(o.recent!);
                       }}
-                      className="shrink-0 rounded px-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200"
+                      className="shrink-0 px-1 text-muted hover:bg-line hover:text-ink"
                     >
                       ×
                     </button>
@@ -173,12 +177,16 @@ export function SearchForm({ compact = false }: { compact?: boolean }) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-sky-600 px-4 text-sm font-medium hover:bg-sky-500 disabled:opacity-50"
+          className={
+            compact
+              ? "bg-accent px-3 text-sm font-semibold text-ink hover:brightness-95 disabled:opacity-50"
+              : "bg-ink px-8 font-display text-[17px] font-extrabold text-white [font-stretch:112%] hover:bg-ink-soft disabled:opacity-50"
+          }
         >
           {pending ? "Buscando..." : "Buscar"}
         </button>
       </div>
-      {state.error && <p className="mt-2 text-sm text-red-400">{state.error}</p>}
+      {state.error && <p className="mt-2 text-sm text-loss">{state.error}</p>}
     </form>
   );
 }

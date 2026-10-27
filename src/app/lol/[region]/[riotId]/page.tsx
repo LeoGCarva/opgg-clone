@@ -83,7 +83,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
               <MatchCard key={m.matchId} match={m} data={data} region={route.region} now={now} />
             ))
           ) : (
-            <p className="rounded-lg border border-zinc-800 p-6 text-center text-zinc-500">
+            <p className="border border-line p-6 text-center text-muted">
               Nenhuma partida nessa fila entre as últimas salvas.
             </p>
           )}
@@ -96,7 +96,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
       </div>
 
       <footer className="text-right text-xs">
-        <Link href={`${basePath}/debug`} className="text-zinc-600 hover:text-zinc-400">
+        <Link href={`${basePath}/debug`} className="text-muted hover:text-muted">
           ver JSON cru da Riot
         </Link>
       </footer>
@@ -108,14 +108,14 @@ function ProfileSkeleton() {
   return (
     <div className="animate-pulse space-y-8">
       <div className="flex items-center gap-5">
-        <div className="size-22 rounded-xl bg-zinc-800" />
-        <div className="h-8 w-56 rounded bg-zinc-800" />
+        <div className="size-22 bg-divider" />
+        <div className="h-8 w-56 bg-divider" />
       </div>
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <div className="h-24 rounded-lg bg-zinc-900" />
+        <div className="h-24 bg-surface" />
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 rounded-lg bg-zinc-900" />
+            <div key={i} className="h-24 bg-surface" />
           ))}
         </div>
       </div>

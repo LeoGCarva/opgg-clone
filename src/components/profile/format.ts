@@ -32,10 +32,21 @@ export function winRate(wins: number, losses: number): number {
   return total ? Math.round((wins / total) * 100) : 0;
 }
 
+// Escala do guia: 60%+ laranja, 55%+ azul, 50%+ verde, abaixo vermelho.
 export function winRateClass(rate: number): string {
-  if (rate >= 60) return "text-amber-300";
-  if (rate >= 50) return "text-sky-400";
-  return "text-zinc-400";
+  if (rate >= 60) return "text-stat-orange";
+  if (rate >= 55) return "text-stat-blue";
+  if (rate >= 50) return "text-win";
+  return "text-loss";
+}
+
+// Escala do guia: 5+ laranja, 4+ azul, 3+ turquesa, abaixo cinza. Sem mortes conta como 5+.
+export function kdaClass(kills: number, deaths: number, assists: number): string {
+  const ratio = deaths === 0 ? Infinity : (kills + assists) / deaths;
+  if (ratio >= 5) return "text-stat-orange";
+  if (ratio >= 4) return "text-stat-blue";
+  if (ratio >= 3) return "text-stat-teal";
+  return "text-muted";
 }
 
 const ROLE_PT: Record<string, string> = {
