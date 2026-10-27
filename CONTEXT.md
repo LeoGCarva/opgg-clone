@@ -132,12 +132,15 @@ expirada, indisponibilidade) aparecem numa caixa de erro em vez de quebrar a pá
 | `search-form.tsx` (client) | Busca do header e da home: seletor de região + campo **combobox** com sugestões (debounce 200 ms, cancela requisições antigas), ↑/↓/Enter/Esc, clique fora fecha, ARIA completo. Campo vazio mostra **buscas recentes** (com botão de remover). Enter sem escolher sugestão faz a busca exata pela Server Action (sem tag → lista `/search`). |
 | `use-player-suggestions.ts` | Hook que consulta `/api/search`. |
 | `recent-searches.ts` / `remember-search.tsx` | Recentes no `localStorage` (máx. 5, protegido contra storage bloqueado, sincroniza entre abas). O perfil registra o jogador aberto — só jogadores que existem entram. |
-| `profile/*` | Cabeçalho, cards de elo (com o gráfico de PDL dos últimos 30 dias e o ícone do elo — `tier-icon.tsx` usa os "mini crests" do cliente do LoL em `public/ranked/*.svg`, também no ranking, nas sugestões da busca e em `/search`), card de partida, abas de fila, botões Atualizar e Carregar mais, card e tabela de campeões, ícones (`GameIcon`), formatação (tempo relativo, duração, KDA, WR, tier e rota em português). |
-| `champions/*` | Filtros de rota/elo/tier (`href.ts` monta os links), campo de busca da tier list (client component, debounce de 250 ms) e selo de tier. |
-| `esports/*` | Abas do Worlds, logo/nome do time, linha do calendário e cartão da chave, detalhe do jogo, datas no fuso de Brasília. |
+| `profile/*` | Cabeçalho, cards de elo (com o gráfico de PDL dos últimos 30 dias e o ícone do elo — `tier-icon.tsx` usa os "mini crests" do cliente do LoL em `public/ranked/*.svg`, também no ranking, nas sugestões da busca e em `/search`), card de partida, abas de fila, botões Atualizar e Carregar mais, card e tabela de campeões, ícones (`GameIcon`), formatação (tempo relativo, duração, KDA, WR, tier e rota em português); `profile-skeleton.tsx` com os esqueletos do perfil e da tabela de campeões do jogador. |
+| `champions/*` | Filtros de rota/elo/tier (`href.ts` monta os links; abas de rota sempre na ordem Topo → Suporte), campo de busca da tier list (client component, debounce de 250 ms), selo de tier, `rune-page.tsx` (árvore de runas completa da página do campeão) e `skeletons.tsx` (tier list e página do campeão). |
+| `leaderboard/*` | Seletor de região do ranking e `leaderboard-skeleton.tsx`. |
+| `esports/*` | Abas do Worlds, logo/nome do time, linha do calendário e cartão da chave, detalhe do jogo, datas no fuso de Brasília; `skeletons.tsx` (listas do Worlds e série). |
+| `loading/*` | `skeleton.tsx`: `Skeleton` (bloco pulsando, parado com movimento reduzido), `SkeletonRegion` (`role="status"` + "Carregando…" para leitor de tela), `PageHeroSkeleton` (topo com o título real) e `TabsSkeleton`. `loading-screen.tsx`: tela com a marca **rubra** e barra animada (`animate-loading-bar` em `globals.css`), usada em `app/loading.tsx` e no JSON cru do perfil. |
 
 ### Cache e renderização
 - Perfil e páginas de jogador renderizam na requisição (dentro de `<Suspense>` com skeleton).
+- Carregamento: o `<Suspense>` de cada página mostra um esqueleto com o formato dela (mesmas caixas e colunas, título real); `app/loading.tsx` é o fallback geral com a tela da marca.
 - Data Dragon em cache por 1 dia; tier list e página de campeão com cache de ~1 min (o
   agregador roda em outro processo e não consegue invalidar o cache do Next).
 - Worlds: dados da Leaguepedia com cache de 10 min (≈ 6 requisições por renovação); as

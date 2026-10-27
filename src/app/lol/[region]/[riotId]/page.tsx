@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
 import { ChampionSummary } from "@/components/profile/champion-summary";
 import { LoadMoreButton } from "@/components/profile/load-more-button";
 import { MatchCard } from "@/components/profile/match-card";
@@ -108,25 +109,6 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
           ver JSON cru da Riot
         </Link>
       </footer>
-    </div>
-  );
-}
-
-function ProfileSkeleton() {
-  return (
-    <div className="animate-pulse space-y-8">
-      <div className="flex items-center gap-5">
-        <div className="size-22 bg-divider" />
-        <div className="h-8 w-56 bg-divider" />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <div className="h-24 bg-surface" />
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 bg-surface" />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { WorldsListSkeleton } from "@/components/esports/skeletons";
 import { BracketCard } from "@/components/esports/series";
 import { TeamLabel } from "@/components/esports/team";
 import { LeaguepediaErrorBox, WorldsTabs } from "@/components/esports/worlds-tabs";
@@ -21,7 +22,7 @@ export default function WorldsStandingsPage() {
   return (
     <>
       <WorldsTabs active="standings" />
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<WorldsListSkeleton />}>
         <Standings />
       </Suspense>
     </>

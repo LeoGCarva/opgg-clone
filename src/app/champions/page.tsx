@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { TierListSkeleton } from "@/components/champions/skeletons";
 import { BracketTabs, RoleTabs, TierChips, ViewToggle } from "@/components/champions/filters";
 import { href, type Query } from "@/components/champions/href";
 import { TierBadge } from "@/components/champions/tier-badge";
@@ -25,7 +26,7 @@ export const metadata: Metadata = { title: "Tier list de campeões · rubra" };
 export default function ChampionsPage({ searchParams }: PageProps<"/champions">) {
   return (
     <main className="flex-1">
-      <Suspense fallback={<div className="mx-auto mt-8 h-96 max-w-[1240px] animate-pulse bg-surface" />}>
+      <Suspense fallback={<TierListSkeleton />}>
         <TierListContent searchParams={searchParams} />
       </Suspense>
     </main>

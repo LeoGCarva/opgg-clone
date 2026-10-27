@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { WorldsListSkeleton } from "@/components/esports/skeletons";
 import { formatDay } from "@/components/esports/format";
 import { SeriesRow } from "@/components/esports/series";
 import { LeaguepediaErrorBox, pill, WorldsTabs } from "@/components/esports/worlds-tabs";
@@ -19,7 +20,7 @@ export default function WorldsCalendarPage({ searchParams }: PageProps<"/esports
   return (
     <>
       <WorldsTabs active="calendar" />
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<WorldsListSkeleton />}>
         <Calendar searchParams={searchParams} />
       </Suspense>
     </>

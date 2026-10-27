@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { SeriesSkeleton } from "@/components/esports/skeletons";
 import { formatDay, formatTime } from "@/components/esports/format";
 import { GameDetail } from "@/components/esports/game-detail";
 import { StatusBadge } from "@/components/esports/series";
@@ -21,7 +22,7 @@ export default function WorldsMatchPage({ params, searchParams }: Props) {
   return (
     <>
       <WorldsTabs />
-      <Suspense fallback={<div className="h-[40rem] animate-pulse bg-surface" />}>
+      <Suspense fallback={<SeriesSkeleton />}>
         <MatchContent params={params} searchParams={searchParams} />
       </Suspense>
     </>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { PlayerChampionsSkeleton } from "@/components/profile/profile-skeleton";
 import { ChampionTable } from "@/components/profile/champion-table";
 import { QueueTabs } from "@/components/profile/queue-tabs";
 import { getStaticData } from "@/lib/ddragon";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function PlayerChampionsPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<PlayerChampionsSkeleton />}>
         <ChampionsContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>

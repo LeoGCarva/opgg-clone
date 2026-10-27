@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Skeleton, SkeletonRegion } from "@/components/loading/skeleton";
 import { playerDetail } from "@/components/profile/format";
 import { GameIcon } from "@/components/profile/game-icon";
 import { TierIcon } from "@/components/profile/tier-icon";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Busca por jogador · rubra" };
 export default function SearchPage({ searchParams }: PageProps<"/search">) {
   return (
     <main className="mx-auto w-full max-w-[860px] flex-1 px-6 pt-12 pb-20">
-      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
+      <Suspense fallback={<SearchSkeleton />}>
         <SearchResults searchParams={searchParams} />
       </Suspense>
     </main>
@@ -96,5 +97,25 @@ async function SearchResults({ searchParams }: Pick<PageProps<"/search">, "searc
         Lista dos jogadores que já estão no banco do site (buscados ou vistos em partidas coletadas).
       </p>
     </>
+  );
+}
+
+function SearchSkeleton() {
+  return (
+    <SkeletonRegion label="os jogadores">
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="mt-3 h-12 w-full max-w-[560px]" />
+      <div className="mt-8 border border-line bg-surface">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex items-center gap-4 border-t border-divider px-5 py-3 first:border-t-0">
+            <Skeleton className="size-11 shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </SkeletonRegion>
   );
 }
