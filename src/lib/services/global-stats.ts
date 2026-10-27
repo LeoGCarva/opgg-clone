@@ -14,13 +14,21 @@ import { assignTiers, minGamesFor, type TierEntry } from "./tiers";
 // Leituras das tabelas do agregador. O cache é curto porque o agregador roda em outro
 // processo (não tem como avisar o Next) — os dados aparecem em até ~1 min.
 
+// Elos que o site oferece como filtro, na ordem das abas. O agregador também calcula `emerald`,
+// que só entra em "Todos".
 export const GLOBAL_BRACKETS = {
-  all: "Todos (Esmeralda+)",
-  master_plus: "Mestre+",
+  all: "Todos",
   diamond: "Diamante",
-  emerald: "Esmeralda",
+  master_plus: "Mestre+",
 } as const;
 export type GlobalBracket = keyof typeof GLOBAL_BRACKETS;
+
+/** Texto descritivo do filtro ("Todos" = Esmeralda para cima). */
+export const BRACKET_SCOPE: Record<GlobalBracket, string> = {
+  all: "Esmeralda+",
+  diamond: "Diamante",
+  master_plus: "Mestre+",
+};
 
 export function isGlobalBracket(value: unknown): value is GlobalBracket {
   return typeof value === "string" && value in GLOBAL_BRACKETS;

@@ -8,7 +8,7 @@ import { roleLabel, winRate, winRateClass } from "@/components/profile/format";
 import { GameIcon } from "@/components/profile/game-icon";
 import { championIdBySlug, championSlug, ddragonUrl, getStaticData, type StaticData } from "@/lib/ddragon";
 import {
-  GLOBAL_BRACKETS,
+  BRACKET_SCOPE,
   getChampionDetails,
   isGlobalBracket,
   isRole,
@@ -65,7 +65,7 @@ async function ChampionContent({ params, searchParams }: Pick<Props, "params" | 
           </h1>
           {details && (
             <p className="text-sm text-muted">
-              {roleLabel(details.role)} · Patch {details.patch} · {GLOBAL_BRACKETS[bracket]}
+              {roleLabel(details.role)} · Patch {details.patch} · {BRACKET_SCOPE[bracket]}
             </p>
           )}
         </div>

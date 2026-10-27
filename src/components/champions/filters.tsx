@@ -3,6 +3,7 @@ import { roleLabel } from "@/components/profile/format";
 import { GLOBAL_BRACKETS, ROLES, type GlobalBracket, type Role } from "@/lib/services/global-stats";
 import { TIERS, tierFilterParam } from "@/lib/services/tier-filters";
 import type { Tier } from "@/lib/services/tiers";
+import { TierIcon } from "@/components/profile/tier-icon";
 import { href, type Query } from "./href";
 
 
@@ -11,6 +12,9 @@ export const pill = (active: boolean) =>
   `flex h-11 items-center border px-4 text-sm font-semibold ${
     active ? "border-ink bg-ink text-white" : "border-line-strong bg-surface text-ink hover:border-ink"
   }`;
+
+// Ícone de cada aba de elo; "Todos" fica sem.
+const BRACKET_ICON: Record<GlobalBracket, string | null> = { all: null, diamond: "DIAMOND", master_plus: "MASTER" };
 
 /** Abas de elo; preserva a rota (e, na tier list, os outros filtros via `query`). */
 export function BracketTabs({
@@ -33,8 +37,9 @@ export function BracketTabs({
           key={b}
           href={href(basePath, { ...query, bracket: b === "all" ? undefined : b, role, view })}
           aria-current={b === active ? "page" : undefined}
-          className={pill(b === active)}
+          className={`${pill(b === active)} gap-2`}
         >
+          {BRACKET_ICON[b] && <TierIcon tier={BRACKET_ICON[b]} size={20} />}
           {GLOBAL_BRACKETS[b]}
         </Link>
       ))}
