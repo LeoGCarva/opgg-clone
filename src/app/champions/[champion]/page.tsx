@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function ChampionPage({ params, searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-      <Suspense fallback={<div className="h-96 animate-pulse rounded-lg bg-zinc-900" />}>
+      <Suspense fallback={<div className="h-96 animate-pulse bg-surface" />}>
         <ChampionContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -52,19 +52,19 @@ async function ChampionContent({ params, searchParams }: Pick<Props, "params" | 
 
   return (
     <div className="space-y-6">
-      <Link href="/champions" className="text-sm text-zinc-500 hover:text-zinc-300">
+      <Link href="/champions" className="text-sm text-muted hover:text-ink-soft">
         ← Tier list
       </Link>
 
       <header className="flex flex-wrap items-center gap-5">
-        <GameIcon src={ddragonUrl.champion(data.version, champion.image)} alt={champion.name} size={80} className="rounded-xl" />
+        <GameIcon src={ddragonUrl.champion(data.version, champion.image)} alt={champion.name} size={80} className="" />
         <div className="space-y-1">
           <h1 className="flex items-center gap-3 text-3xl font-bold">
             {champion.name}
             {details?.summary && <TierBadge tier={details.summary.tier} />}
           </h1>
           {details && (
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-muted">
               {roleLabel(details.role)} · Patch {details.patch} · {GLOBAL_BRACKETS[bracket]}
             </p>
           )}
@@ -89,7 +89,7 @@ async function ChampionContent({ params, searchParams }: Pick<Props, "params" | 
       </div>
 
       {!details ? (
-        <p className="rounded-lg border border-zinc-800 p-8 text-center text-zinc-500">
+        <p className="border border-line p-8 text-center text-muted">
           Sem partidas de {champion.name} coletadas nesse elo ainda.
         </p>
       ) : (
@@ -117,9 +117,9 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
           const style = data.runes[styleId];
           return (
             <span className="flex items-center gap-2">
-              {keystone && <GameIcon src={ddragonUrl.rune(keystone.image)} alt={keystone.name} size={36} className="bg-zinc-950" />}
-              {style && <GameIcon src={ddragonUrl.rune(style.image)} alt={style.name} size={24} className="bg-zinc-950 p-0.5" />}
-              <span className="text-sm text-zinc-300">{keystone?.name}</span>
+              {keystone && <GameIcon src={ddragonUrl.rune(keystone.image)} alt={keystone.name} size={36} className="bg-ink" />}
+              {style && <GameIcon src={ddragonUrl.rune(style.image)} alt={style.name} size={24} className="bg-ink p-0.5" />}
+              <span className="text-sm text-ink-soft">{keystone?.name}</span>
             </span>
           );
         }} />
@@ -144,7 +144,7 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
         <Options options={builds.boots} total={games} render={(key) => (
           <span className="flex items-center gap-2">
             {item(Number(key))}
-            <span className="text-sm text-zinc-300">{data.items[Number(key)]?.name}</span>
+            <span className="text-sm text-ink-soft">{data.items[Number(key)]?.name}</span>
           </span>
         )} />
       </Card>
@@ -154,7 +154,7 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
           <span className="flex items-center gap-1.5">
             {ids(key).map((id, i) => (
               <span key={id} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-zinc-600">›</span>}
+                {i > 0 && <span className="text-muted">›</span>}
                 {item(id)}
               </span>
             ))}
@@ -167,8 +167,8 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
           <span className="flex items-center gap-1.5 font-mono font-bold">
             {key.split("-").map((slot, i) => (
               <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-zinc-600">›</span>}
-                <span className="rounded bg-zinc-800 px-2 py-1">{SKILL_KEYS[slot]}</span>
+                {i > 0 && <span className="text-muted">›</span>}
+                <span className="bg-divider px-2 py-1">{SKILL_KEYS[slot]}</span>
               </span>
             ))}
           </span>
@@ -189,7 +189,7 @@ function ChampionBuild({ details, data }: { details: ChampionDetails; data: Stat
 function Stat({ label, value, className = "" }: { label: string; value: string; className?: string }) {
   return (
     <div>
-      <dt className="text-xs text-zinc-500">{label}</dt>
+      <dt className="text-xs text-muted">{label}</dt>
       <dd className={`text-lg font-semibold ${className}`}>{value}</dd>
     </div>
   );
@@ -198,15 +198,15 @@ function Stat({ label, value, className = "" }: { label: string; value: string; 
 function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     // min-w-0: sem isso a grade de habilidades (larga) estica a coluna inteira no celular.
-    <section className={`min-w-0 space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 ${className}`}>
-      <h2 className="text-sm font-medium text-zinc-400">{title}</h2>
+    <section className={`min-w-0 space-y-3 border border-line bg-surface p-4 ${className}`}>
+      <h2 className="text-sm font-medium text-muted">{title}</h2>
       {children}
     </section>
   );
 }
 
 function Options({ options, total, render }: { options: BuildOption[]; total: number; render: (key: string) => React.ReactNode }) {
-  if (!options.length) return <p className="text-sm text-zinc-600">Sem dados suficientes</p>;
+  if (!options.length) return <p className="text-sm text-muted">Sem dados suficientes</p>;
   return (
     <ul className="space-y-2">
       {options.map((o) => (
@@ -214,7 +214,7 @@ function Options({ options, total, render }: { options: BuildOption[]; total: nu
           {render(o.key)}
           <span className="shrink-0 text-right text-xs">
             <span className={winRateClass(winRate(o.wins, o.games - o.wins))}>{winRate(o.wins, o.games - o.wins)}% WR</span>
-            <span className="block text-zinc-500">
+            <span className="block text-muted">
               {pct(o.games, total)} · {o.games} jogos
             </span>
           </span>
@@ -233,12 +233,12 @@ function SkillPath({ path }: { path: string }) {
         <tbody>
           {["1", "2", "3", "4"].map((slot) => (
             <tr key={slot}>
-              <th className="pr-2 text-zinc-400">{SKILL_KEYS[slot]}</th>
+              <th className="pr-2 text-muted">{SKILL_KEYS[slot]}</th>
               {levels.map((s, i) => (
                 <td key={i} className="p-0.5">
                   <span
-                    className={`flex size-6 items-center justify-center rounded ${
-                      s === slot ? (slot === "4" ? "bg-amber-600 text-zinc-950" : "bg-sky-700 text-white") : "bg-zinc-800/60 text-transparent"
+                    className={`flex size-6 items-center justify-center ${
+                      s === slot ? (slot === "4" ? "bg-stat-orange text-white" : "bg-ink text-white") : "bg-divider text-transparent"
                     }`}
                   >
                     {i + 1}
@@ -254,7 +254,7 @@ function SkillPath({ path }: { path: string }) {
 }
 
 function Matchups({ list, data }: { list: ChampionDetails["matchups"]; data: StaticData }) {
-  if (!list.length) return <p className="text-sm text-zinc-600">Sem confrontos suficientes (mín. 3 partidas)</p>;
+  if (!list.length) return <p className="text-sm text-muted">Sem confrontos suficientes (mín. 3 partidas)</p>;
   return (
     <ul className="space-y-2">
       {list.map((m) => {
@@ -272,7 +272,7 @@ function Matchups({ list, data }: { list: ChampionDetails["matchups"]; data: Sta
               {opponent?.name ?? m.opponentId}
             </Link>
             <span className={winRateClass(wr)}>{wr}%</span>
-            <span className="w-16 text-right text-xs text-zinc-500">{m.games} jogos</span>
+            <span className="w-16 text-right text-xs text-muted">{m.games} jogos</span>
           </li>
         );
       })}
