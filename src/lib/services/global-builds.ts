@@ -96,7 +96,14 @@ export type AggregatedBuild = {
   wins: number;
 };
 
-/** Conta cada chave por (bracket, campeão, rota). Toda linha conta também no bracket "all". */
+// A página mostra só as primeiras opções; guardar a cauda (quase tudo com 1 jogo, sobretudo
+// páginas de runas completas) estoura o espaço do banco.
+export const MAX_OPTIONS_STORED = 5;
+
+/**
+ * Conta cada chave por (bracket, campeão, rota). Toda linha conta também no bracket "all".
+ * Guarda só as `MAX_OPTIONS_STORED` mais jogadas de cada (bracket, campeão, rota, tipo).
+ */
 export function aggregateBuilds(rows: GlobalBuildRow[], items: Record<number, ItemInfo>): AggregatedBuild[] {
   const counts = new Map<string, AggregatedBuild>();
   for (const row of rows) {
@@ -113,5 +120,15 @@ export function aggregateBuilds(rows: GlobalBuildRow[], items: Record<number, It
       }
     }
   }
-  return [...counts.values()];
+
+  const groups = new Map<string, AggregatedBuild[]>();
+  for (const c of counts.values()) {
+    const group = `${c.bracket}|${c.championId}|${c.role}|${c.kind}`;
+    const options = groups.get(group);
+    if (options) options.push(c);
+    else groups.set(group, [c]);
+  }
+  return [...groups.values()].flatMap((options) =>
+    options.sort((a, b) => b.games - a.games || b.wins - a.wins).slice(0, MAX_OPTIONS_STORED),
+  );
 }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ItemInfo } from "@/lib/ddragon";
-import { aggregateBuilds, buildKeys, skillMaxOrder, type GlobalBuildRow } from "@/lib/services/global-builds";
+import {
+  aggregateBuilds,
+  buildKeys,
+  MAX_OPTIONS_STORED,
+  skillMaxOrder,
+  type GlobalBuildRow,
+} from "@/lib/services/global-builds";
 import { assignTiers } from "@/lib/services/tiers";
 
 const item = (gold: number, tags: string[] = [], into?: string[]): ItemInfo => ({ name: "x", gold, tags, into });
@@ -80,6 +86,17 @@ describe("buildKeys", () => {
 });
 
 describe("aggregateBuilds", () => {
+  it("guarda só as opções mais jogadas de cada tipo", () => {
+    // 8 feitiços diferentes; o par 4-7 aparece 3 vezes e deve ficar em primeiro.
+    const rows = [
+      ...Array.from({ length: 8 }, (_, i) => row({ summoner1Id: 100 + i, summoner2Id: 4 })),
+      row(), row(), row(),
+    ];
+    const spells = aggregateBuilds(rows, ITEMS).filter((a) => a.kind === "spells" && a.bracket === "all");
+    expect(spells).toHaveLength(MAX_OPTIONS_STORED);
+    expect(spells[0]).toMatchObject({ key: "4-7", games: 3 });
+  });
+
   it("conta no bracket da partida e em 'all'", () => {
     const agg = aggregateBuilds([row(), row({ win: false, bracket: "emerald" })], ITEMS);
     const runes = agg.filter((a) => a.kind === "runes");
