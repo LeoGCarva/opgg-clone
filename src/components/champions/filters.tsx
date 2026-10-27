@@ -47,7 +47,7 @@ export function BracketTabs({
   );
 }
 
-/** Abas de rota; `roles` limita às rotas disponíveis (página do campeão). */
+/** Abas de rota na ordem de `ROLES`; `roles` limita às rotas disponíveis (página do campeão). */
 export function RoleTabs({
   basePath,
   active,
@@ -77,7 +77,8 @@ export function RoleTabs({
           Todas
         </Link>
       )}
-      {roles.map((r) => (
+      {/* Sempre na ordem do mapa (Topo → Suporte), não na ordem em que `roles` chega. */}
+      {ROLES.filter((r) => roles.includes(r)).map((r) => (
         <Link
           key={r}
           href={href(basePath, { ...query, bracket: bracketParam, role: r, view })}
