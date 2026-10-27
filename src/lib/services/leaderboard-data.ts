@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { cacheLife } from "next/cache";
-import { after } from "next/server";
+import { after, connection } from "next/server";
 import { db } from "@/lib/db";
 import { riotIds } from "@/lib/db/schema";
 import { RiotAuthError } from "@/lib/riot/client";
@@ -90,6 +90,9 @@ const RESOLVE_TIMEOUT_MS = 6000;
  * Chave inválida (`RiotAuthError`) é lançada; outros erros só deixam aquele jogador sem nome.
  */
 export async function resolveNames(platform: Platform, puuids: string[]): Promise<Map<string, PlayerName>> {
+  // Banco, Riot (Bottleneck usa Math.random), timers e gravação: só na requisição. Sem isso o
+  // prefetch com searchParams pré-renderiza até aqui e o Next acusa Date.now()/Math.random().
+  await connection();
   const names = await namesFromDb(puuids);
   const missing = puuids.filter((p) => !names.has(p));
   if (!missing.length) return names;
