@@ -1,7 +1,8 @@
 # opgg clone
 
 Clone de estudo do op.gg / u.gg: perfil de jogadores, campeões mais jogados e estatísticas
-globais de campeões (tier list, builds, runas, counters) a partir da API da Riot.
+globais de campeões (tier list, builds, runas, counters) a partir da API da Riot, e uma aba
+do **Worlds 2026** com dados da [Leaguepedia](https://lol.fandom.com).
 
 Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind v4 · Drizzle + Postgres (Neon) · Vitest.
 
@@ -11,8 +12,12 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind v4 · Drizzl
 2. Copie `.env.example` para `.env` e preencha `DATABASE_URL` (Neon, string *pooled*) e
    `RIOT_API_KEY` ([developer.riotgames.com](https://developer.riotgames.com) — a chave de
    desenvolvimento expira a cada 24h).
-3. `pnpm db:migrate`
-4. `pnpm dev` → http://localhost:3000
+3. Opcional (aba Worlds): crie um bot password em
+   [Special:BotPasswords](https://lol.fandom.com/wiki/Special:BotPasswords) só com "Basic rights"
+   e preencha `LEAGUEPEDIA_USER` (`SeuNome@nomedobot`) e `LEAGUEPEDIA_PASSWORD` — sem login a
+   API da wiki quase sempre responde `ratelimited`.
+4. `pnpm db:migrate`
+5. `pnpm dev` → http://localhost:3000
 
 ## Como os dados entram
 
@@ -59,5 +64,13 @@ src/lib/services/    perfil, mappers de partida/timeline, coletor, agregador, ti
 src/lib/ddragon.ts   dados estáticos (campeões, itens, runas) do Data Dragon
 src/app/lol/…        perfil do jogador, campeões do jogador, debug (JSON cru)
 src/app/champions/…  tier list e página de campeão
+src/lib/esports/     cliente da Leaguepedia, parse, classificação e estatísticas do Worlds
+src/app/esports/…    Worlds 2026: calendário, série, classificação, estatísticas
 scripts/             smoke test, coletor, agregador
 ```
+
+## Créditos
+
+Dados de esports: [Leaguepedia](https://lol.fandom.com) (CC BY-SA 3.0). Ícones de elo: "mini crests" do
+cliente do LoL (Riot Games), obtidos via [Community Dragon](https://raw.communitydragon.org). Imagens de campeões,
+itens e runas: Data Dragon da Riot Games. Projeto de estudo, sem vínculo com a Riot Games.
