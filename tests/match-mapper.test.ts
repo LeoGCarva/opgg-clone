@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchToRows, patchOf } from "@/lib/services/match-mapper";
+import { matchToRows, patchOf, runePage } from "@/lib/services/match-mapper";
 import type { MatchDto, ParticipantDto } from "@/lib/riot/types";
 
 function participant(overrides: Partial<ParticipantDto> = {}): ParticipantDto {
@@ -80,6 +80,27 @@ describe("matchToRows", () => {
 
   it("guarda nome vazio como null", () => {
     expect(participants[1].riotIdGameName).toBeNull();
+  });
+});
+
+describe("runePage", () => {
+  const sel = (perk: number) => ({ perk, var1: 0, var2: 0, var3: 0 });
+
+  it("monta a página completa na ordem árvore, runas, fragmentos", () => {
+    expect(
+      runePage({
+        styles: [
+          { description: "primaryStyle", style: 8000, selections: [8005, 9111, 9104, 8014].map(sel) },
+          { description: "subStyle", style: 8300, selections: [8304, 8345].map(sel) },
+        ],
+        statPerks: { offense: 5005, flex: 5008, defense: 5011 },
+      }),
+    ).toEqual([8000, 8005, 9111, 9104, 8014, 8300, 8304, 8345, 5005, 5008, 5011]);
+  });
+
+  it("devolve null para páginas incompletas", () => {
+    expect(runePage(participant().perks)).toBeNull();
+    expect(runePage(undefined)).toBeNull();
   });
 });
 

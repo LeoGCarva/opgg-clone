@@ -11,11 +11,25 @@ export type GlobalBuildRow = {
   startItems: number[] | null;
   keystoneId: number | null;
   secondaryStyleId: number | null;
+  runes: number[] | null;
   summoner1Id: number;
   summoner2Id: number;
 };
 
-export type BuildKind = "start" | "boots" | "core" | "runes" | "spells" | "skills" | "skill_path";
+export type BuildKind =
+  | "start"
+  | "boots"
+  | "core"
+  | "item4"
+  | "item5"
+  | "item6"
+  | "runes"
+  | "spells"
+  | "skills"
+  | "skill_path";
+
+// Itens depois do core: cada posição é contada sozinha (sequências de 6 quase nunca se repetem).
+const LATE_ITEM_KINDS = ["item4", "item5", "item6"] as const;
 
 const CORE_SIZE = 3;
 const SKILL_PATH_LEVELS = 15;
@@ -51,12 +65,14 @@ export function buildKeys(row: GlobalBuildRow, items: Record<number, ItemInfo>):
   const boots = build.find((id) => isUpgradedBoots(items[id]));
   if (boots) keys.push({ kind: "boots", key: String(boots) });
 
-  const core = [...new Set(build.filter((id) => isCompletedItem(items[id])))].slice(0, CORE_SIZE);
-  if (core.length === CORE_SIZE) keys.push({ kind: "core", key: core.join("-") });
+  const completed = [...new Set(build.filter((id) => isCompletedItem(items[id])))];
+  if (completed.length >= CORE_SIZE) keys.push({ kind: "core", key: completed.slice(0, CORE_SIZE).join("-") });
+  LATE_ITEM_KINDS.forEach((kind, i) => {
+    const id = completed[CORE_SIZE + i];
+    if (id) keys.push({ kind, key: String(id) });
+  });
 
-  if (row.keystoneId && row.secondaryStyleId) {
-    keys.push({ kind: "runes", key: `${row.keystoneId}-${row.secondaryStyleId}` });
-  }
+  if (row.runes) keys.push({ kind: "runes", key: row.runes.join("-") });
 
   keys.push({ kind: "spells", key: [row.summoner1Id, row.summoner2Id].sort((a, b) => a - b).join("-") });
 

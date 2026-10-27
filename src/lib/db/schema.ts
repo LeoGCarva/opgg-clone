@@ -144,6 +144,8 @@ export const matchParticipants = pgTable(
     summoner2Id: integer().notNull(),
     keystoneId: integer(),
     secondaryStyleId: integer(),
+    // Página completa: [árvore primária, 4 runas, árvore secundária, 2 runas, fragmentos ataque/flex/defesa].
+    runes: integer().array(),
     // Extraídos da timeline (só partidas do coletor): compras em ordem, níveis de skill
     // (slot 1-4 = Q/W/E/R) e itens comprados no primeiro minuto.
     itemBuild: integer().array(),
@@ -221,8 +223,8 @@ export const championBuilds = pgTable(
     bracket: text().notNull(),
     championId: integer().notNull(),
     role: text().notNull(),
-    kind: text().notNull(), // start | boots | core | runes | spells | skills | skill_path
-    key: text().notNull(), // ex.: core "3078-3042-3161", runes "8010-8300", skills "1-3-2"
+    kind: text().notNull(), // start | boots | core | item4-6 | runes | spells | skills | skill_path
+    key: text().notNull(), // ex.: core "3078-3042-3161", item4 "3036", runes = página completa, skills "1-3-2"
     games: integer().notNull(),
     wins: integer().notNull(),
   },

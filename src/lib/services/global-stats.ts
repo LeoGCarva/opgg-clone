@@ -100,6 +100,9 @@ export type ChampionDetails = {
 };
 
 const BUILD_OPTIONS_SHOWN = 3;
+// Páginas de runas ocupam bastante espaço com a árvore inteira.
+const RUNE_PAGES_SHOWN = 2;
+const BUILD_KINDS: BuildKind[] = ["start", "boots", "core", "item4", "item5", "item6", "runes", "spells", "skills", "skill_path"];
 const MIN_MATCHUP_GAMES = 3;
 
 export async function getChampionDetails(
@@ -156,10 +159,10 @@ export async function getChampionDetails(
   ]);
 
   const builds = {} as Record<BuildKind, BuildOption[]>;
-  for (const kind of ["start", "boots", "core", "runes", "spells", "skills", "skill_path"] as BuildKind[]) {
+  for (const kind of BUILD_KINDS) {
     builds[kind] = buildRows
       .filter((b) => b.kind === kind)
-      .slice(0, BUILD_OPTIONS_SHOWN)
+      .slice(0, kind === "runes" ? RUNE_PAGES_SHOWN : BUILD_OPTIONS_SHOWN)
       .map(({ key, games, wins }) => ({ key, games, wins }));
   }
 

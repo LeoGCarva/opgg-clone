@@ -1,6 +1,6 @@
 import type { matchBans, matches, matchParticipants } from "@/lib/db/schema";
 import type { Platform } from "@/lib/riot/routing";
-import type { MatchDto, TimelineDto } from "@/lib/riot/types";
+import type { MatchDto, ParticipantDto, TimelineDto } from "@/lib/riot/types";
 import { timelineToBuilds } from "./timeline-mapper";
 
 export type MatchRow = typeof matches.$inferInsert;
@@ -10,6 +10,25 @@ export type BanRow = typeof matchBans.$inferInsert;
 /** "16.21.829.8620" → "16.21" */
 export function patchOf(gameVersion: string): string {
   return gameVersion.split(".").slice(0, 2).join(".");
+}
+
+/** [primária, 4 runas, secundária, 2 runas, fragmentos]; null se a página vier incompleta. */
+export function runePage(perks: ParticipantDto["perks"] | undefined): number[] | null {
+  const primary = perks?.styles.find((s) => s.description === "primaryStyle");
+  const secondary = perks?.styles.find((s) => s.description === "subStyle");
+  const shards = perks?.statPerks;
+  if (!primary || primary.selections.length !== 4 || !secondary || secondary.selections.length !== 2 || !shards) {
+    return null;
+  }
+  return [
+    primary.style,
+    ...primary.selections.map((s) => s.perk),
+    secondary.style,
+    ...secondary.selections.map((s) => s.perk),
+    shards.offense,
+    shards.flex,
+    shards.defense,
+  ];
 }
 
 export function matchToRows(
@@ -74,6 +93,7 @@ export function matchToRows(
       summoner2Id: p.summoner2Id,
       keystoneId: primary?.selections[0]?.perk ?? null,
       secondaryStyleId: secondary?.style ?? null,
+      runes: runePage(p.perks),
       itemBuild: build?.itemBuild ?? null,
       skillOrder: build?.skillOrder ?? null,
       startItems: build?.startItems ?? null,

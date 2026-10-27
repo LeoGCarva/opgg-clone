@@ -113,7 +113,7 @@ export type ParticipantDto = {
   item6: number;
   summoner1Id: number;
   summoner2Id: number;
-  perks: { styles: PerkStyleDto[] };
+  perks: { styles: PerkStyleDto[]; statPerks?: { offense: number; flex: number; defense: number } };
 };
 
 export type MatchDto = {

@@ -14,6 +14,7 @@ const ITEMS: Record<number, ItemInfo> = {
   3046: item(2650),
   3094: item(2650),
   3072: item(3400),
+  3036: item(3000),
   3340: item(0, ["Trinket"]),
 };
 
@@ -29,6 +30,7 @@ function row(extra: Partial<GlobalBuildRow> = {}): GlobalBuildRow {
     startItems: [3340, 2003, 1055], // o totem deve ser ignorado
     keystoneId: 8005,
     secondaryStyleId: 8300,
+    runes: [8000, 8005, 9111, 9104, 8014, 8300, 8304, 8345, 5005, 5008, 5011],
     summoner1Id: 7,
     summoner2Id: 4,
     ...extra,
@@ -51,7 +53,8 @@ describe("buildKeys", () => {
       { kind: "start", key: "1055-2003" },
       { kind: "boots", key: "3006" },
       { kind: "core", key: "3031-3046-3094" }, // 3031 repetido conta uma vez
-      { kind: "runes", key: "8005-8300" },
+      { kind: "item4", key: "3072" },
+      { kind: "runes", key: "8000-8005-9111-9104-8014-8300-8304-8345-5005-5008-5011" },
       { kind: "spells", key: "4-7" },
       { kind: "skills", key: "1-3-2" },
       { kind: "skill_path", key: "1-3-1-2-1-4-1-3-1-3-4-3-3-2-2" },
@@ -61,6 +64,18 @@ describe("buildKeys", () => {
   it("pula o core quando não há 3 itens completos", () => {
     const keys = buildKeys(row({ itemBuild: [1055, 3031] }), ITEMS);
     expect(keys.find((k) => k.kind === "core")).toBeUndefined();
+  });
+
+  it("conta 4º, 5º e 6º itens separadamente", () => {
+    const keys = buildKeys(row({ itemBuild: [3031, 3046, 3094, 3072, 3006, 3036] }), ITEMS);
+    expect(keys.filter((k) => k.kind.startsWith("item"))).toEqual([
+      { kind: "item4", key: "3072" },
+      { kind: "item5", key: "3036" },
+    ]);
+  });
+
+  it("pula as runas sem página completa", () => {
+    expect(buildKeys(row({ runes: null }), ITEMS).find((k) => k.kind === "runes")).toBeUndefined();
   });
 });
 
