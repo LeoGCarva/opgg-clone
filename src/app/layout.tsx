@@ -57,9 +57,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         {children}
         <footer className="mt-auto border-t-2 border-ink">
-          <p className="mx-auto max-w-[1240px] px-6 py-5 text-[13px] text-muted">
-            Projeto não oficial, sem vínculo com a Riot Games.
-          </p>
+          <div className="mx-auto flex max-w-[1240px] flex-col gap-3 px-6 py-5 text-[13px] text-muted">
+            <nav aria-label="Rodapé" className="flex gap-4 font-semibold text-ink-soft">
+              <Link href="/sobre" className="hover:text-ink hover:underline">
+                Sobre o rubra
+              </Link>
+            </nav>
+            {/* Aviso legal exigido pelos termos da API da Riot ("Legal Jibber Jabber"). */}
+            <p className="max-w-[900px] text-pretty">
+              O rubra não é endossado pela Riot Games e não reflete as visões ou opiniões da Riot Games nem de
+              qualquer pessoa oficialmente envolvida na produção ou gestão das propriedades da Riot Games. Riot
+              Games e todas as propriedades associadas são marcas comerciais ou marcas registradas da Riot Games, Inc.
+            </p>
+            <p lang="en" className="max-w-[900px] text-pretty">
+              rubra isn&apos;t endorsed by Riot Games and doesn&apos;t reflect the views or opinions of Riot Games or
+              anyone officially involved in producing or managing Riot Games properties. Riot Games, and all
+              associated properties are trademarks or registered trademarks of Riot Games, Inc.
+            </p>
+          </div>
         </footer>
       </body>
     </html>

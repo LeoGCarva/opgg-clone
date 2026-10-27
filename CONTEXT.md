@@ -107,10 +107,14 @@ da Riot nunca chega ao navegador.
 Server Components por padrão; Client Components só onde há interação. Tema escuro, pt-BR,
 layout responsivo (celular e desktop).
 
+O rodapé de todas as páginas tem o link **Sobre o rubra** e o aviso legal exigido pelos termos da
+API da Riot ("isn't endorsed by Riot Games…"), em português e no original em inglês.
+
 ### Rotas
 | Rota | Conteúdo |
 |---|---|
 | `/` | Título e busca grande com autocomplete. |
+| `/sobre` | **Sobre o rubra.** O que o site faz, fontes de dados (API da Riot, Data Dragon, Leaguepedia, Community Dragon para os ícones de elo), o que é guardado (só dados públicos do jogo; buscas recentes só no navegador), pedido de remoção via issue no GitHub e o aviso legal da Riot. Página estática. |
 | `/search?region=&name=` | **Busca sem tag.** Lista os jogadores do banco com o nome exato na região (ícone e elo/nível de quem tem perfil salvo, etiqueta "Perfil salvo"), cada um linkando para o perfil; estado vazio explica que só aparecem jogadores já buscados ou vistos em partidas coletadas. |
 | `/lol/[region]/[riotId]` | **Perfil.** Ícone, nível, Riot ID, "atualizado há X", botão **Atualizar** (cooldown 2 min). Cards de elo Solo/Duo e Flex (tier em português, PDL, V/D, WR e gráfico de PDL dos últimos 30 dias — aparece a partir da 2ª foto em `lp_history`). Card **Campeões mais jogados** (top 7). Abas de fila **Todas / Solo/Duo / Flex**. Lista de partidas: fila, tempo relativo, vitória/derrota/remake, duração, campeão + nível, feitiços, runas, K/D/A + KDA, CS e CS/min, 7 slots de item, os jogadores de cada time com link para o perfil. **Carregar mais** (até 100). 1ª visita a um jogador busca na Riot e salva; as seguintes leem só do banco. |
 | `/lol/[region]/[riotId]/champions` | **Campeões do jogador.** Abas de fila; tabela com todos os campeões (jogos, WR, KDA, CS/min, dano); cada linha abre a build que ele mais usa (itens, bota, runas, feitiços). |
