@@ -77,7 +77,7 @@ da Riot nunca chega ao navegador.
 | `global-stats.ts` | Leituras das tabelas agregadas (com `'use cache'` de ~1 min): tier list por bracket; detalhes de um campeão (rotas disponíveis, resumo, top 3 de cada tipo de build, confrontos com ≥ 3 jogos). |
 | `player-search.ts` | **Autocomplete.** Busca nomes por prefixo (ou nome exato + prefixo de tag quando há `#`) em contas salvas e participantes de partidas da mesma plataforma; um resultado por jogador (nome mais recente); quem tem perfil vem primeiro, com elo Solo/Duo. Escapa curingas do `LIKE`. `findPlayersByName` (busca sem tag): todos com o nome exato, sem diferenciar maiúsculas, até 50. |
 | `leaderboard.ts` | Função pura: junta as ligas Desafiante/Grão-Mestre/Mestre em um ranking (tier, PDL, WR, jogos) com a posição geral; slugs de tier da URL; paginação. |
-| `leaderboard-data.ts` | **Ranking.** `getLeaderboard` (`'use cache'` 10 min): as 3 ligas da Solo/Duo no host da plataforma. `resolveNames`: nomes por puuid do banco (`accounts` → `riot_ids` → partida mais recente); os que faltam vêm de account-v1 e são gravados em `riot_ids` — espera até ~6 s, o resto termina via `after()` e aparece na próxima visita; buscas iguais em andamento são reaproveitadas. |
+| `leaderboard-data.ts` | **Ranking.** `getLeaderboard` (`'use cache'` 10 min): as 3 ligas da Solo/Duo no host da plataforma. `resolveNames` (começa com `connection()`: só roda na requisição, nunca no prerender do prefetch): nomes por puuid do banco (`accounts` → `riot_ids` → partida mais recente); os que faltam vêm de account-v1 e são gravados em `riot_ids` — espera até ~6 s, o resto termina via `after()` e aparece na próxima visita; buscas iguais em andamento são reaproveitadas. |
 
 ### Server Actions
 | Action | Arquivo | O que faz |
