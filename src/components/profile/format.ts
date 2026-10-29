@@ -16,6 +16,25 @@ export function timeAgo(date: Date, now: number): string {
   return "agora";
 }
 
+// O "dia" da partida é o de Brasília, não o do servidor (que pode estar em UTC).
+const TIME_ZONE = "America/Sao_Paulo";
+const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }); // AAAA-MM-DD
+const dayMonth = new Intl.DateTimeFormat("pt-BR", { timeZone: TIME_ZONE, day: "2-digit", month: "2-digit" });
+const fullDate = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TIME_ZONE,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+
+/** Partida de hoje: "há 2 horas". De outro dia: "28/10" (com ano se não for o atual). */
+export function matchTime(date: Date, now: number): string {
+  const day = dayKey.format(date);
+  const today = dayKey.format(now);
+  if (day === today) return timeAgo(date, now);
+  return day.slice(0, 4) === today.slice(0, 4) ? dayMonth.format(date) : fullDate.format(date);
+}
+
 export function formatDuration(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;

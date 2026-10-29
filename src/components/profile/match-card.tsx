@@ -3,7 +3,7 @@ import { ddragonUrl, queueName, type StaticData } from "@/lib/ddragon";
 import { toRiotIdSlug } from "@/lib/riot/riot-id";
 import type { RegionSlug } from "@/lib/riot/routing";
 import type { Participant, ProfileMatch } from "@/lib/services/profile";
-import { formatDuration, kdaClass, kdaRatio, timeAgo } from "./format";
+import { formatDuration, kdaClass, kdaRatio, matchTime } from "./format";
 import { GameIcon } from "./game-icon";
 
 type Props = {
@@ -34,7 +34,7 @@ export function MatchCard({ match, data, region, now }: Props) {
     >
       <div className="col-span-2 flex items-baseline gap-2 text-xs sm:col-span-1 sm:flex-col sm:gap-1">
         <span className="font-semibold text-ink">{queueName(data, match.queueId)}</span>
-        <span className="text-muted">{timeAgo(match.gameCreation, now)}</span>
+        <span className="text-muted">{matchTime(match.gameCreation, now)}</span>
         <span className={me.win && !remake ? "font-semibold text-win" : remake ? "text-muted" : "text-loss"}>
           {outcome}
         </span>
