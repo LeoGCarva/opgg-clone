@@ -19,20 +19,53 @@ export function timeAgo(date: Date, now: number): string {
 // O "dia" da partida é o de Brasília, não o do servidor (que pode estar em UTC).
 const TIME_ZONE = "America/Sao_Paulo";
 const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }); // AAAA-MM-DD
-const dayMonth = new Intl.DateTimeFormat("pt-BR", { timeZone: TIME_ZONE, day: "2-digit", month: "2-digit" });
-const fullDate = new Intl.DateTimeFormat("pt-BR", {
+const hourMinute = new Intl.DateTimeFormat("pt-BR", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+const dayLabel = new Intl.DateTimeFormat("pt-BR", {
   timeZone: TIME_ZONE,
-  day: "2-digit",
-  month: "2-digit",
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+const dayLabelWithYear = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+  day: "numeric",
+  month: "short",
   year: "numeric",
 });
 
-/** Partida de hoje: "há 2 horas". De outro dia: "28/10" (com ano se não for o atual). */
+/** Partida de hoje: "há 2 horas". De outro dia: "21:14" (a data fica no cabeçalho do grupo). */
 export function matchTime(date: Date, now: number): string {
-  const day = dayKey.format(date);
+  return dayKey.format(date) === dayKey.format(now) ? timeAgo(date, now) : hourMinute.format(date);
+}
+
+export type DayGroup<T> = { key: string; label: string; items: T[] };
+
+/**
+ * Agrupa itens já ordenados por data (mais recente primeiro) por dia de Brasília.
+ * Rótulos: "Hoje", "Ontem" ou "seg., 27 de out." (com ano se não for o atual).
+ */
+export function groupByDay<T>(items: T[], dateOf: (item: T) => Date, now: number): DayGroup<T>[] {
   const today = dayKey.format(now);
-  if (day === today) return timeAgo(date, now);
-  return day.slice(0, 4) === today.slice(0, 4) ? dayMonth.format(date) : fullDate.format(date);
+  const yesterday = dayKey.format(now - 24 * 3600 * 1000);
+  const groups: DayGroup<T>[] = [];
+  for (const item of items) {
+    const date = dateOf(item);
+    const key = dayKey.format(date);
+    const last = groups.at(-1);
+    if (last?.key === key) {
+      last.items.push(item);
+      continue;
+    }
+    const label =
+      key === today
+        ? "Hoje"
+        : key === yesterday
+          ? "Ontem"
+          : (key.slice(0, 4) === today.slice(0, 4) ? dayLabel : dayLabelWithYear).format(date);
+    groups.push({ key, label, items: [item] });
+  }
+  return groups;
 }
 
 export function formatDuration(totalSeconds: number): string {

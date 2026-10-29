@@ -3,7 +3,7 @@ import { ddragonUrl, queueName, type StaticData } from "@/lib/ddragon";
 import { toRiotIdSlug } from "@/lib/riot/riot-id";
 import type { RegionSlug } from "@/lib/riot/routing";
 import type { Participant, ProfileMatch } from "@/lib/services/profile";
-import { formatDuration, kdaClass, kdaRatio, matchTime } from "./format";
+import { formatDuration, kdaClass, kdaRatio, matchTime, winRate, winRateClass } from "./format";
 import { GameIcon } from "./game-icon";
 
 type Props = {
@@ -13,11 +13,33 @@ type Props = {
   now: number;
 };
 
+// Partidas com menos de ~3,5 min terminam em "remake" e não contam vitória/derrota.
+const REMAKE_MAX_SECONDS = 210;
+
+/** Cabeçalho de um dia do histórico: "Hoje" à esquerda, "3V 2D · 60%" à direita. */
+export function MatchDayHeader({ label, matches }: { label: string; matches: ProfileMatch[] }) {
+  const counted = matches.filter((m) => m.gameDuration >= REMAKE_MAX_SECONDS);
+  const wins = counted.filter((m) => m.me.win).length;
+  const losses = counted.length - wins;
+  const wr = winRate(wins, losses);
+
+  return (
+    <h2 className="flex items-baseline justify-between gap-3 border-b border-line pt-2 pb-1 text-sm">
+      <span className="font-semibold text-ink first-letter:uppercase">{label}</span>
+      {counted.length > 0 && (
+        <span className="text-xs text-muted">
+          <span className="text-win">{wins}V</span> <span className="text-loss">{losses}D</span> ·{" "}
+          <span className={winRateClass(wr)}>{wr}%</span>
+        </span>
+      )}
+    </h2>
+  );
+}
+
 export function MatchCard({ match, data, region, now }: Props) {
   const { me } = match;
   const v = data.version;
-  // Partidas com menos de ~3,5 min terminam em "remake" e não contam vitória/derrota.
-  const remake = match.gameDuration < 210;
+  const remake = match.gameDuration < REMAKE_MAX_SECONDS;
   const outcome = remake ? "Remake" : me.win ? "Vitória" : "Derrota";
   const tone = remake
     ? "border-l-line-strong bg-surface"
