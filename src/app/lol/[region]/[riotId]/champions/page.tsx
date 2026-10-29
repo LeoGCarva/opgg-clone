@@ -35,10 +35,10 @@ async function ChampionsContent({ params, searchParams }: Pick<Props, "params" |
   const [result, data] = await Promise.all([loadProfile(platform, riotId, { queue }), getStaticData()]);
   if (!result.ok) return <RiotErrorBox error={result.error} />;
 
-  const { account } = result.profile;
+  const { account, puuids } = result.profile;
   const [stats, builds] = await Promise.all([
-    getPlayerChampionStats(account.puuid, { queue }),
-    getPlayerChampionBuilds(account.puuid, data.items, { queue }),
+    getPlayerChampionStats(puuids, { queue }),
+    getPlayerChampionBuilds(puuids, data.items, { queue }),
   ]);
   const totalGames = stats.reduce((sum, s) => sum + s.games, 0);
 
