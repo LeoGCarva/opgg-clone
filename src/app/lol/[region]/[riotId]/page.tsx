@@ -4,8 +4,9 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
 import { ChampionSummary } from "@/components/profile/champion-summary";
+import { groupByDay } from "@/components/profile/format";
 import { LoadMoreButton } from "@/components/profile/load-more-button";
-import { MatchCard } from "@/components/profile/match-card";
+import { MatchCard, MatchDayHeader } from "@/components/profile/match-card";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { QueueTabs } from "@/components/profile/queue-tabs";
 import { RankCard } from "@/components/profile/rank-card";
@@ -88,8 +89,13 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
         <section className="min-w-0 space-y-3">
           <QueueTabs basePath={basePath} active={queue} />
           {matches.length ? (
-            matches.map((m) => (
-              <MatchCard key={m.matchId} match={m} data={data} region={route.region} now={now} />
+            groupByDay(matches, (m) => m.gameCreation, now).map((day) => (
+              <div key={day.key} className="space-y-2">
+                <MatchDayHeader label={day.label} matches={day.items} />
+                {day.items.map((m) => (
+                  <MatchCard key={m.matchId} match={m} data={data} region={route.region} now={now} />
+                ))}
+              </div>
             ))
           ) : (
             <p className="border border-line p-6 text-center text-muted">
