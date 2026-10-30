@@ -55,7 +55,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
 
   const { profile, now } = result;
   const { account, leagues, lpHistory, matches } = profile;
-  const championStats = await getPlayerChampionStats(account.puuid, { queue });
+  const championStats = await getPlayerChampionStats(profile.puuids, { queue });
   const championsHref = queue === "all" ? `${basePath}/champions` : `${basePath}/champions?queue=${queue}`;
   // Se veio a página cheia, pode haver mais partidas (no banco ou na Riot).
   const canLoadMore = matches.length >= limit && limit < MAX_MATCHES_SHOWN;

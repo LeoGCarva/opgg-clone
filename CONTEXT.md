@@ -62,7 +62,7 @@ da Riot nunca chega ao navegador.
 ### Serviços — `src/lib/services/`
 | Arquivo | O que faz |
 |---|---|
-| `profile.ts` | **Perfil do jogador.** `refreshProfile` (Riot → banco: conta, elos e últimas 20 partidas; só baixa as que faltam). `loadOlderMatches` ("carregar mais": próximas 20 mais antigas que a mais antiga salva, por fila). `getProfile` (só banco: conta, elos, histórico de PDL dos últimos 30 dias por fila e N partidas com os 10 participantes de cada). O refresh grava uma foto em `lp_history` por fila ranqueada quando tier/divisão/PDL/V/D mudou. Filtros de fila `all/solo/flex`. Cooldown do botão Atualizar: 2 min. |
+| `profile.ts` | **Perfil do jogador.** `refreshProfile` (Riot → banco: conta, elos e últimas 20 partidas; só baixa as que faltam). `loadOlderMatches` ("carregar mais": próximas 20 mais antigas que a mais antiga salva, por fila). `getProfile` (só banco: conta, elos, histórico de PDL dos últimos 30 dias por fila e N partidas com os 10 participantes de cada). O refresh grava uma foto em `lp_history` por fila ranqueada quando tier/divisão/PDL/V/D mudou. Filtros de fila `all/solo/flex`. Cooldown do botão Atualizar: 2 min. O puuid é criptografado por chave da API: se o salvo dá 400 (chave antiga), o refresh busca de novo pelo Riot ID salvo e grava uma conta nova, sem mexer na antiga; `getProfile` usa a linha mais recente do Riot ID e junta partidas e PDL de todos os puuids dele (`puuids`, usado também nas estatísticas por campeão). |
 | `match-mapper.ts` | Converte a partida da Riot em linhas do banco: partida (patch curto `16.21`), 10 participantes (CS, itens, runa principal, estilo secundário...) e bans. Recebe opcionalmente a timeline e o bracket de elo. Guarda o `raw` via `slimMatch()` (sem `challenges`/`missions` dos participantes) e a página de runas completa via `runePage()`. |
 | `timeline-mapper.ts` | Extrai da timeline (~450 KB, não é guardada): ordem de compra dos itens (aplicando `ITEM_UNDO`), ordem de skills (ignora `EVOLVE`) e itens do primeiro minuto. |
 | `match-store.ts` | Grava partidas + participantes + bans em transação, idempotente (`onConflictDoNothing`); modo `replace` promove uma partida do perfil para a versão com timeline. |
@@ -83,7 +83,7 @@ da Riot nunca chega ao navegador.
 | Action | Arquivo | O que faz |
 |---|---|---|
 | `searchPlayer` | `src/app/actions.ts` | Valida região e `Nome#TAG`; redireciona para `/lol/{região}/{Nome-TAG}`. Sem `#` (nome de 3 a 16 caracteres), redireciona para `/search?region=&name=`; senão devolve erro. |
-| `refreshAction` | `src/app/lol/[region]/[riotId]/actions.ts` | Botão Atualizar: confere cooldown no servidor, chama `refreshProfile`, `refresh()` da página; erros da Riot viram mensagem. |
+| `refreshAction` | `src/app/lol/[region]/[riotId]/actions.ts` | Botão Atualizar: confere cooldown no servidor, chama `refreshProfile`, `refresh()` da página; erros da Riot viram mensagem (404 no refresh = jogador trocou de Riot ID). |
 | `loadMoreAction` | idem | "Carregar mais": `loadOlderMatches` e redirect para `?n=+20` (máx. 100), preservando a fila. Valida todos os argumentos (vêm do cliente). |
 
 ### Route Handler

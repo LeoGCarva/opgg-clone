@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, min, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { accounts, leagueEntries, lpHistory, matches, matchParticipants } from "@/lib/db/schema";
+import { RiotApiError } from "@/lib/riot/client";
 import { riotApi } from "@/lib/riot/endpoints";
 import type { RiotId } from "@/lib/riot/riot-id";
 import type { Platform } from "@/lib/riot/routing";
@@ -44,6 +45,25 @@ async function storeMatches(platform: Platform, matchIds: string[]): Promise<num
 type RefreshTarget = { riotId: RiotId } | { puuid: string };
 
 /**
+ * O puuid é criptografado por chave da API: um salvo com outra chave dá 400 ("Exception decrypting").
+ * Nesse caso busca de novo pelo Riot ID salvo, que devolve o puuid válido para a chave atual.
+ */
+async function getAccountByStoredPuuid(platform: Platform, puuid: string) {
+  const api = riotApi();
+  try {
+    return await api.getAccountByPuuid(platform, puuid);
+  } catch (err) {
+    if (!(err instanceof RiotApiError) || err.status !== 400) throw err;
+    const [stored] = await db()
+      .select({ gameName: accounts.gameName, tagLine: accounts.tagLine })
+      .from(accounts)
+      .where(eq(accounts.puuid, puuid));
+    if (!stored) throw err;
+    return api.getAccountByRiotId(platform, stored);
+  }
+}
+
+/**
  * Busca o jogador na Riot e grava no banco. Partidas já salvas não são baixadas de novo,
  * então um refresh típico custa 4 chamadas + 1 por partida nova.
  */
@@ -52,7 +72,7 @@ export async function refreshProfile(platform: Platform, target: RefreshTarget) 
   const account =
     "riotId" in target
       ? await api.getAccountByRiotId(platform, target.riotId)
-      : await api.getAccountByPuuid(platform, target.puuid);
+      : await getAccountByStoredPuuid(platform, target.puuid);
   const { puuid } = account;
 
   const [summoner, leagues, matchIds] = await Promise.all([
@@ -165,7 +185,10 @@ export async function getProfile(
   { queue = "all", limit = MATCHES_PAGE_SIZE }: { queue?: QueueFilter; limit?: number } = {},
 ) {
   const d = db();
-  const [account] = await d
+  // Pode haver mais de uma linha para o mesmo Riot ID: o puuid é criptografado por chave da API,
+  // então um refresh com outra chave grava um puuid novo. A mais recente é a conta atual;
+  // o histórico junta as partidas e o PDL de todas.
+  const rows = await d
     .select()
     .from(accounts)
     .where(
@@ -175,9 +198,10 @@ export async function getProfile(
         eq(accounts.platform, platform),
       ),
     )
-    .orderBy(desc(accounts.updatedAt))
-    .limit(1);
+    .orderBy(desc(accounts.updatedAt));
+  const [account] = rows;
   if (!account) return null;
+  const puuids = rows.map((r) => r.puuid);
 
   const queueId = QUEUE_FILTERS[queue];
   const historySince = new Date(Date.now() - LP_HISTORY_DAYS * 24 * 3600 * 1000);
@@ -186,7 +210,7 @@ export async function getProfile(
     d
       .select()
       .from(lpHistory)
-      .where(and(eq(lpHistory.puuid, account.puuid), gte(lpHistory.recordedAt, historySince)))
+      .where(and(inArray(lpHistory.puuid, puuids), gte(lpHistory.recordedAt, historySince)))
       .orderBy(asc(lpHistory.recordedAt)),
     d
       .select({ me: matchParticipants, gameDuration: matches.gameDuration })
@@ -194,7 +218,7 @@ export async function getProfile(
       .innerJoin(matches, eq(matches.matchId, matchParticipants.matchId))
       .where(
         and(
-          eq(matchParticipants.puuid, account.puuid),
+          inArray(matchParticipants.puuid, puuids),
           queueId === undefined ? undefined : eq(matchParticipants.queueId, queueId),
         ),
       )
@@ -225,7 +249,7 @@ export async function getProfile(
   const lpHistoryByQueue: Record<string, LpPoint[]> = {};
   for (const row of history) (lpHistoryByQueue[row.queueType] ??= []).push(row);
 
-  return { account, leagues, lpHistory: lpHistoryByQueue, matches: profileMatches };
+  return { account, puuids, leagues, lpHistory: lpHistoryByQueue, matches: profileMatches };
 }
 
 export async function getLastRefreshedAt(puuid: string): Promise<Date | null> {

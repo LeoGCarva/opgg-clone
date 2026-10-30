@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { matches, matchParticipants as mp } from "@/lib/db/schema";
 import type { ItemInfo } from "@/lib/ddragon";
@@ -11,10 +11,10 @@ import { QUEUE_FILTERS, type QueueFilter } from "./profile";
 const notArena = sql`${matches.raw}->'info'->>'gameMode' <> 'CHERRY'`;
 const REMAKE_MAX_SECONDS = 210;
 
-function playerFilter(puuid: string, queue: QueueFilter): SQL | undefined {
+function playerFilter(puuids: string[], queue: QueueFilter): SQL | undefined {
   const queueId = QUEUE_FILTERS[queue];
   return and(
-    eq(mp.puuid, puuid),
+    inArray(mp.puuid, puuids),
     gte(matches.gameDuration, REMAKE_MAX_SECONDS),
     queueId === undefined ? notArena : eq(mp.queueId, queueId),
   );
@@ -23,7 +23,7 @@ function playerFilter(puuid: string, queue: QueueFilter): SQL | undefined {
 export type PlayerChampionStats = Awaited<ReturnType<typeof getPlayerChampionStats>>[number];
 
 /** Uma linha por campeão que o jogador jogou, do mais jogado para o menos. */
-export async function getPlayerChampionStats(puuid: string, { queue = "all" }: { queue?: QueueFilter } = {}) {
+export async function getPlayerChampionStats(puuids: string[], { queue = "all" }: { queue?: QueueFilter } = {}) {
   const games = sql<number>`count(*)::int`;
   return db()
     .select({
@@ -41,14 +41,14 @@ export async function getPlayerChampionStats(puuid: string, { queue = "all" }: {
     })
     .from(mp)
     .innerJoin(matches, eq(matches.matchId, mp.matchId))
-    .where(playerFilter(puuid, queue))
+    .where(playerFilter(puuids, queue))
     .groupBy(mp.championId)
     .orderBy(desc(games), desc(sql`count(*) filter (where ${mp.win})`));
 }
 
 /** Build mais usada pelo jogador em cada campeão (itens finais, bota, runas, feitiços). */
 export async function getPlayerChampionBuilds(
-  puuid: string,
+  puuids: string[],
   itemInfo: Record<number, ItemInfo>,
   { queue = "all" }: { queue?: QueueFilter } = {},
 ): Promise<Map<number, ChampionBuild>> {
@@ -64,7 +64,7 @@ export async function getPlayerChampionBuilds(
     })
     .from(mp)
     .innerJoin(matches, eq(matches.matchId, mp.matchId))
-    .where(playerFilter(puuid, queue));
+    .where(playerFilter(puuids, queue));
 
   const byChampion = Map.groupBy(rows, (r) => r.championId);
   return new Map(

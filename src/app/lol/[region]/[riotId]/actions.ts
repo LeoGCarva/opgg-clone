@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { RiotApiError, RiotAuthError } from "@/lib/riot/client";
+import { RiotApiError, RiotAuthError, RiotNotFoundError } from "@/lib/riot/client";
 import { PLATFORMS, type Platform } from "@/lib/riot/routing";
 import {
   getLastRefreshedAt,
@@ -18,6 +18,8 @@ export type RefreshState = { error?: string; message?: string };
 
 function riotErrorMessage(err: unknown): string | null {
   if (err instanceof RiotAuthError) return "Chave da Riot inválida ou expirada.";
+  // Refresh de conta salva com outra chave refaz a busca pelo Riot ID; 404 = o jogador trocou de nome.
+  if (err instanceof RiotNotFoundError) return "Jogador não encontrado com esse Riot ID. Busque pelo nome atual.";
   if (err instanceof RiotApiError) return `A Riot respondeu ${err.status}. Tente de novo.`;
   return null;
 }
