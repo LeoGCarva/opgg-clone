@@ -42,6 +42,48 @@ export function shouldRecord(previous: LpSnapshot | undefined, next: LpSnapshot)
   );
 }
 
+const QUEUE_IDS: Record<string, number> = { RANKED_SOLO_5x5: 420, RANKED_FLEX_SR: 440 };
+const MAX_LP_PER_GAME = 50;
+
+export type LpMatch = { matchId: string; queueId: number; gameCreation: Date; gameDuration: number; win: boolean };
+
+/**
+ * PDL ganho/perdido por partida. A Riot não informa isso: sai da diferença entre duas fotos
+ * seguidas do elo, e só quando dá para ter certeza — exatamente 1 jogo da fila entre elas
+ * (pelo V/D), exatamente 1 partida salva terminando nesse intervalo e com o mesmo resultado.
+ * Fotos em ordem cronológica, por fila (como `getProfile` devolve).
+ */
+export function lpChangeByMatch(history: Record<string, LpPoint[]>, matches: LpMatch[]): Map<string, number> {
+  const changes = new Map<string, number>();
+  for (const [queueType, points] of Object.entries(history)) {
+    const queueId = QUEUE_IDS[queueType];
+    if (queueId === undefined) continue;
+    const queueMatches = matches.filter((m) => m.queueId === queueId);
+
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const wins = curr.wins - prev.wins;
+      const losses = curr.losses - prev.losses;
+      if (wins + losses !== 1 || wins < 0 || losses < 0) continue;
+
+      const inWindow = queueMatches.filter((m) => {
+        const end = m.gameCreation.getTime() + m.gameDuration * 1000;
+        return end > prev.recordedAt.getTime() && end <= curr.recordedAt.getTime();
+      });
+      if (inWindow.length !== 1 || inWindow[0].win !== (wins === 1)) continue;
+
+      const before = ladderValue(prev);
+      const after = ladderValue(curr);
+      if (before === null || after === null) continue;
+      // Um jogo vale ~15–35 PDL; acima disso algo mais mudou entre as fotos (ajuste da Riot etc.).
+      if (Math.abs(after - before) > MAX_LP_PER_GAME) continue;
+      changes.set(inWindow[0].matchId, after - before);
+    }
+  }
+  return changes;
+}
+
 export type LpChart = {
   path: string;
   /** Variação entre a primeira e a última foto da janela. */

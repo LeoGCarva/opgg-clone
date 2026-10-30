@@ -1,6 +1,6 @@
 import { refreshAction } from "@/app/lol/[region]/[riotId]/actions";
 import { ddragonUrl } from "@/lib/ddragon";
-import type { Profile } from "@/lib/services/profile";
+import { AUTO_REFRESH_AFTER_MS, type Profile } from "@/lib/services/profile";
 import { timeAgo } from "./format";
 import { GameIcon } from "./game-icon";
 import { RefreshButton } from "./refresh-button";
@@ -12,6 +12,9 @@ type Props = {
 };
 
 export function ProfileHeader({ account, version, now }: Props) {
+  const last = account.lastRefreshedAt;
+  const stale = !last || now - last.getTime() >= AUTO_REFRESH_AFTER_MS;
+
   return (
     <header className="flex flex-wrap items-center gap-5">
       <div className="relative">
@@ -31,7 +34,7 @@ export function ProfileHeader({ account, version, now }: Props) {
           <span className="ml-2 font-sans text-2xl font-semibold normal-case tracking-normal text-muted">#{account.tagLine}</span>
         </h1>
         <div className="flex flex-wrap items-center gap-3">
-          <RefreshButton action={refreshAction.bind(null, account.platform, account.puuid)} />
+          <RefreshButton action={refreshAction.bind(null, account.platform, account.puuid)} auto={stale} />
           {account.lastRefreshedAt && (
             <span className="text-xs text-muted">
               Atualizado {timeAgo(account.lastRefreshedAt, now)}

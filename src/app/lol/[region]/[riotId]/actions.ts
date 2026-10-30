@@ -3,9 +3,10 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { RiotApiError, RiotAuthError, RiotNotFoundError } from "@/lib/riot/client";
-import { PLATFORMS, type Platform } from "@/lib/riot/routing";
+import { toRiotIdSlug } from "@/lib/riot/riot-id";
+import { PLATFORMS, slugFromPlatform, type Platform } from "@/lib/riot/routing";
 import {
-  getLastRefreshedAt,
+  getStoredAccount,
   isQueueFilter,
   loadOlderMatches,
   MATCHES_PAGE_SIZE,
@@ -29,7 +30,8 @@ export async function refreshAction(platform: string, puuid: string): Promise<Re
   // Argumentos de Server Action chegam do cliente: validar sempre.
   if (!PLATFORMS.includes(platform as Platform)) return { error: "Região inválida." };
 
-  const last = await getLastRefreshedAt(puuid);
+  const stored = await getStoredAccount(puuid);
+  const last = stored?.lastRefreshedAt;
   if (last) {
     const waitMs = REFRESH_COOLDOWN_MS - (Date.now() - last.getTime());
     if (waitMs > 0) {
@@ -37,19 +39,30 @@ export async function refreshAction(platform: string, puuid: string): Promise<Re
     }
   }
 
+  let result;
   try {
-    const { newMatches } = await refreshProfile(platform as Platform, { puuid });
-    refresh();
-    return {
-      message: newMatches
-        ? `${newMatches} partida${newMatches > 1 ? "s" : ""} nova${newMatches > 1 ? "s" : ""}.`
-        : "Nenhuma partida nova.",
-    };
+    result = await refreshProfile(platform as Platform, { puuid });
   } catch (err) {
     const error = riotErrorMessage(err);
     if (error) return { error };
     throw err;
   }
+
+  // O jogador trocou de Riot ID: a URL atual (com o nome antigo) viraria 404, então vai para a nova.
+  // redirect lança internamente, então fica fora do try.
+  const renamed =
+    stored &&
+    (stored.gameName.toLowerCase() !== result.riotId.gameName.toLowerCase() ||
+      stored.tagLine.toLowerCase() !== result.riotId.tagLine.toLowerCase());
+  if (renamed) redirect(`/lol/${slugFromPlatform(platform as Platform)}/${toRiotIdSlug(result.riotId)}`);
+
+  const { newMatches } = result;
+  refresh();
+  return {
+    message: newMatches
+      ? `${newMatches} partida${newMatches > 1 ? "s" : ""} nova${newMatches > 1 ? "s" : ""}.`
+      : "Nenhuma partida nova.",
+  };
 }
 
 const PROFILE_PATH = /^\/lol\/[a-z]+\/[^/?#]+$/;

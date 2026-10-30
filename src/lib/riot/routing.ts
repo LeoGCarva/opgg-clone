@@ -38,6 +38,10 @@ export function platformFromSlug(slug: RegionSlug): Platform {
   return SLUG_TO_PLATFORM[slug];
 }
 
+export function slugFromPlatform(platform: Platform): RegionSlug {
+  return REGION_SLUGS.find((slug) => SLUG_TO_PLATFORM[slug] === platform)!;
+}
+
 export function regionOf(platform: Platform): Region {
   return PLATFORM_TO_REGION[platform];
 }
