@@ -104,11 +104,32 @@ da Riot nunca chega ao navegador.
 
 ## Frontend
 
-Server Components por padrão; Client Components só onde há interação. Tema escuro, pt-BR,
+Server Components por padrão; Client Components só onde há interação. Tema claro, pt-BR,
 layout responsivo (celular e desktop).
 
 O rodapé de todas as páginas tem o link **Sobre o rubra** e o aviso legal exigido pelos termos da
 API da Riot ("isn't endorsed by Riot Games…"), em português e no original em inglês.
+
+### Design visual — `src/app/globals.css` + `src/app/layout.tsx`
+Guia de estilo de referência: canvas "Stats LoL — Tier list" › **Guia de estilo**. Todos os
+valores são tokens do Tailwind v4 em `@theme` (`bg-canvas`, `text-ink`, `bg-accent`…); não use
+cores do Tailwind (`zinc-*`, `sky-*`…) nem hex soltos em componentes.
+
+| Grupo | Tokens / regra |
+|---|---|
+| Base | `ink` #0E0F0C (texto, barra do topo, botão primário, divisores 2px) · `canvas` #F1F2EE (fundo) · `surface` #FFF (cards) · `accent` #C8F031 (logo, aba/alternância ativa; sempre com texto `ink`) · `muted` #5B5F57 · `on-ink` #C9CCC3 (texto sobre a barra preta) · `ink-soft` #3A3D35 · `line` #DADCD5 (borda de card) · `line-strong` #C4C7BE (inputs, filtros inativos) · `divider` #E6E7E2 · `link` #2F5BE0 |
+| Resultado | `win` #11803F e `loss` #C42A2A (faixa da partida, anel, tendência, variação de PDL) |
+| Taxa de vitória (`winRateClass`) | 60%+ `stat-orange` · 55%+ `stat-blue` · 50%+ `win` · abaixo `loss`. Na tabela da tier list: ≥ 52% `win`, < 49% `loss`, resto `ink` |
+| KDA (`kdaClass`) | 5+ `stat-orange` · 4+ `stat-blue` · 3+ `stat-teal` · abaixo `muted` (sem mortes = 5+) |
+| Tiers da tier list | `tier-splus` #FF5A36 · `tier-s` #FF9F1C · `tier-a` #4C7DFF · `tier-b` #2BB8A3 · `tier-c` #C4C7BE; texto do selo sempre `ink` |
+| Elos | `elo-iron` … `elo-challenger`: versões escuras para texto em fundo claro (card de ranqueada, ranking) |
+| Fontes | **Archivo** (`font-display`, eixo de largura 62–125): títulos e números — `h1` em `@layer base` com wdth 125, 900, caixa alta, -0.02em; números com `[font-stretch:112%]` e 800. **Instrument Sans** (`font-sans`): texto, rótulos e botões (400–700). Carregadas por `next/font/google` |
+| Layout | Conteúdo em `max-w-[1240px]` com `px-6`; barra do topo `min-h-16` preta; seções separadas por `border-b-2 border-ink`; cards `border border-line bg-surface`, cabeçalho `px-[18px] py-3`, corpo `p-[18px]` |
+| Controles | Altura mínima 44px (`h-11`); botão primário `bg-ink text-white`, secundário `border-2 border-ink`; filtros ativos em `ink`, inativos `border-line-strong`; busca grande com `border-2 border-ink` e `shadow-hard` (8px 8px 0 ink, só nela) |
+| Forma | Raio 0 em cards, botões e inputs; `rounded-full` só em avatares, emblemas e chips da visualização "Por tier" |
+| Ícones | SVG inline em traço (viewBox 24, stroke 2.2–3, pontas arredondadas, `currentColor`); emblemas de elo em `public/ranked/*.svg` (`TierIcon`) |
+| Gráfico de PDL (`rank-card.tsx`) | Só a linha em `ink` (2px), tracejado `line-strong` no piso da divisão atual, pico com anel e ponto de hoje em `accent`; altura 64 no viewBox 260; "Últimos 30 dias" à esquerda e a variação à direita, na mesma linha; rótulo do piso à esquerda (longe do ponto de hoje), acima ou abaixo da linha conforme o começo do gráfico (`start` de `buildLpChart`) |
+| Card da Flex | Recolhido: "Ranqueada Flex · N jogos" na linha do título e "elo · PDL" abaixo. Aberto (`RankBody compact`): elo em 17px e ícone em 36px para V/D e WR caberem ao lado em todos os elos; sem a linha de jogos repetida |
 
 ### Rotas
 | Rota | Conteúdo |
@@ -116,7 +137,7 @@ API da Riot ("isn't endorsed by Riot Games…"), em português e no original em 
 | `/` | Título e busca grande com autocomplete. |
 | `/sobre` | **Sobre o rubra.** O que o site faz, fontes de dados (API da Riot, Data Dragon, Leaguepedia, Community Dragon para os ícones de elo), o que é guardado (só dados públicos do jogo; buscas recentes só no navegador), pedido de remoção via issue no GitHub e o aviso legal da Riot. Página estática. |
 | `/search?region=&name=` | **Busca sem tag.** Lista os jogadores do banco com o nome exato na região (ícone e elo/nível de quem tem perfil salvo, etiqueta "Perfil salvo"), cada um linkando para o perfil; estado vazio explica que só aparecem jogadores já buscados ou vistos em partidas coletadas. |
-| `/lol/[region]/[riotId]` | **Perfil.** Ícone, nível, Riot ID, "atualizado há X", botão **Atualizar** (cooldown 2 min; ao abrir um perfil atualizado há mais de 10 min, dispara sozinho — `AUTO_REFRESH_AFTER_MS`). Cards de elo Solo/Duo e Flex (tier em português, PDL, V/D, WR e gráfico de PDL dos últimos 30 dias — aparece a partir da 2ª foto em `lp_history`). Card **Campeões mais jogados** (top 7, com abas Todas/Solo/Duo/Flex próprias: as três filas vêm do servidor e a aba troca só no cliente, começando na fila da URL). Abas de fila **Todas / Solo/Duo / Flex**. Lista de partidas: fila, tempo relativo, vitória/derrota/remake, PDL ganho/perdido (só quando é exato: 1 jogo da fila entre duas fotos de `lp_history`, partida e V/D batendo, até ±50 — `lpChangeByMatch`), duração, campeão + nível, feitiços, runas, K/D/A + KDA, CS e CS/min, 7 slots de item, os jogadores de cada time com link para o perfil. **Carregar mais** (até 100). 1ª visita a um jogador busca na Riot e salva; as seguintes leem só do banco. |
+| `/lol/[region]/[riotId]` | **Perfil.** Ícone, nível, Riot ID, "atualizado há X", botão **Atualizar** (cooldown 2 min; ao abrir um perfil atualizado há mais de 10 min, dispara sozinho — `AUTO_REFRESH_AFTER_MS`). Cards de elo Solo/Duo e Flex (tier em português, PDL, V/D, WR e gráfico de PDL dos últimos 30 dias — aparece a partir da 2ª foto em `lp_history`); o de Flex começa recolhido (`<details>`, ícone + "Ranqueada Flex · N jogos" + elo + PDL) e abre para V/D, WR e gráfico. Card **Campeões mais jogados** (top 7, com abas Todas/Solo/Duo/Flex próprias: as três filas vêm do servidor e a aba troca só no cliente, começando na fila da URL). Abas de fila **Todas / Solo/Duo / Flex**. Lista de partidas: fila, tempo relativo, vitória/derrota/remake, PDL ganho/perdido (só quando é exato: 1 jogo da fila entre duas fotos de `lp_history`, partida e V/D batendo, até ±50 — `lpChangeByMatch`), duração, campeão + nível, feitiços, runas, K/D/A + KDA, CS e CS/min, 7 slots de item, os jogadores de cada time com link para o perfil. **Carregar mais** (até 100). 1ª visita a um jogador busca na Riot e salva; as seguintes leem só do banco. |
 | `/lol/[region]/[riotId]/champions` | **Campeões do jogador.** Abas de fila; tabela com todos os campeões (jogos, WR, KDA, CS/min, dano); cada linha abre a build que ele mais usa (itens, bota, runas, feitiços). |
 | `/lol/[region]/[riotId]/debug` | Respostas cruas da Riot em JSON (chama a API direto, sem banco) — para estudo. |
 | `/champions` | **Tier list global.** Filtros de rota (Todas, Topo, Selva, Meio, Atirador, Suporte) e elo (Todos = Esmeralda+, Diamante, Mestre+ — com o ícone do elo; também na página do campeão; `?bracket=emerald` cai em Todos); visualização "Por tier" (padrão, faixas S+…C) ou "Tabela" (`?view=table`); colunas tier, campeão, WR, pick rate, ban rate, partidas; patch e tamanho da amostra. Campo de busca por nome (`?q=`, atualiza enquanto digita; sem JS funciona com Enter), chips de tier (`?tier=`) e cabeçalhos que ordenam a tabela (`?ordem=`); buscar volta rota/tier/ordem/visualização ao padrão (mantém o elo) e trocar rota/elo/visualização depois preserva a busca e os filtros; "Nenhum campeão encontrado" com link para limpar. Estado vazio orienta a rodar o coletor. |

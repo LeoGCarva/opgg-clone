@@ -59,6 +59,8 @@ describe("buildLpChart", () => {
     expect(chart.delta).toBe(193);
     expect(chart.peak.point.leaguePoints).toBe(180);
     expect(chart.end.x).toBe(200);
+    expect(chart.start.x).toBe(0);
+    expect(chart.start.y).toBeGreaterThan(chart.end.y);
     expect(chart.path.startsWith("M0 ")).toBe(true);
     // O pico fica mais alto (y menor) que o fim.
     expect(chart.peak.y).toBeLessThan(chart.end.y);
