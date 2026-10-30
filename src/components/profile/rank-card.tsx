@@ -53,7 +53,10 @@ export function RankCard({
         <summary className="flex cursor-pointer list-none items-center gap-3 px-[18px] py-3 hover:bg-canvas [&::-webkit-details-marker]:hidden">
           <TierIcon tier={entry.tier} size={32} />
           <div className="min-w-0 flex-1">
-            <h2 className="font-sans text-xs font-bold text-muted">{title}</h2>
+            <h2 className="flex items-baseline gap-1.5 font-sans text-xs font-bold text-muted">
+              {title}
+              <span className="font-medium whitespace-nowrap">· {games} jogos</span>
+            </h2>
             <p className="flex items-baseline gap-1.5 text-sm">
               <span className={`truncate font-display font-extrabold ${TIER_COLORS[entry.tier] ?? ""}`}>
                 {tierLabel(entry.tier, entry.rank)}
@@ -77,8 +80,7 @@ export function RankCard({
           </svg>
         </summary>
         <div className="border-t border-divider">
-          <p className="px-[18px] pt-3 text-right text-[13px] text-muted">{games} jogos</p>
-          <RankBody entry={entry} history={history} />
+          <RankBody entry={entry} history={history} compact />
         </div>
       </details>
     );
@@ -103,16 +105,17 @@ export function RankCard({
 }
 
 /** Elo, PDL, V/D, % e o gráfico — o corpo do card (aberto ou expandido). */
-function RankBody({ entry, history }: { entry: LeagueEntry; history: LpPoint[] }) {
+// `compact` (Flex aberta): elo e ícone menores para V/D e % caberem na mesma linha em todos os elos.
+function RankBody({ entry, history, compact = false }: { entry: LeagueEntry; history: LpPoint[]; compact?: boolean }) {
   const wr = winRate(entry.wins, entry.losses);
   return (
     <>
       {/* Cartão estreito: as estatísticas descem para a linha de baixo quando não cabem ao lado. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-[18px]">
         <div className="flex items-center gap-3">
-          <TierIcon tier={entry.tier} size={44} />
+          <TierIcon tier={entry.tier} size={compact ? 36 : 44} />
           <div>
-            <p className={`font-display text-[22px] leading-tight font-extrabold [font-stretch:112%] ${TIER_COLORS[entry.tier] ?? ""}`}>
+            <p className={`font-display ${compact ? "text-[17px]" : "text-[22px]"} leading-tight font-extrabold [font-stretch:112%] ${TIER_COLORS[entry.tier] ?? ""}`}>
               {tierLabel(entry.tier, entry.rank)}
             </p>
             <p className="text-sm text-muted">{entry.leaguePoints} PDL</p>
@@ -132,7 +135,7 @@ function RankBody({ entry, history }: { entry: LeagueEntry; history: LpPoint[] }
 
 const WIDTH = 260;
 const shortDate = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
-const HEIGHT = 112;
+const HEIGHT = 64;
 
 /** Gráfico de PDL dos últimos 30 dias: só a linha, o piso da divisão atual, o pico e o ponto de hoje. */
 function LpChartSection({ entry, history }: { entry: LeagueEntry; history: LpPoint[] }) {
@@ -153,15 +156,15 @@ function LpChartSection({ entry, history }: { entry: LeagueEntry; history: LpPoi
 
   return (
     <div className="flex flex-col gap-3 border-t border-divider p-[18px]">
-      <div className="flex flex-col gap-0.5">
+      <div className="flex items-baseline justify-between gap-3">
         <span className="text-xs font-semibold text-muted">Últimos {LP_HISTORY_DAYS} dias</span>
         <span
-          className={`flex items-center gap-1 font-display text-[22px] font-extrabold [font-stretch:112%] ${
+          className={`flex items-center gap-1 font-display text-[17px] font-extrabold [font-stretch:112%] ${
             chart.delta > 0 ? "text-win" : chart.delta < 0 ? "text-loss" : "text-ink"
           }`}
         >
           {chart.delta !== 0 && (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {up ? (
                 <>
                   <path d="M12 19 V5" />
@@ -188,7 +191,14 @@ function LpChartSection({ entry, history }: { entry: LeagueEntry; history: LpPoi
         {chart.floorY !== null && (
           <>
             <line x1="0" x2={WIDTH} y1={chart.floorY} y2={chart.floorY} stroke="var(--color-line-strong)" strokeDasharray="3 4" />
-            <text x={WIDTH} y={chart.floorY - 5} textAnchor="end" fill="var(--color-muted)" fontSize="10" fontWeight="600">
+            {/* À esquerda, longe do ponto de hoje; acima ou abaixo da linha, do lado oposto ao começo do gráfico. */}
+            <text
+              x="0"
+              y={chart.start.y > chart.floorY ? chart.floorY - 5 : chart.floorY + 12}
+              fill="var(--color-muted)"
+              fontSize="10"
+              fontWeight="600"
+            >
               {floorLabel}
             </text>
           </>

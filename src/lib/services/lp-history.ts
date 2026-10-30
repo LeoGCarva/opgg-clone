@@ -89,6 +89,7 @@ export type LpChart = {
   /** Variação entre a primeira e a última foto da janela. */
   delta: number;
   peak: { x: number; y: number; point: LpPoint };
+  start: { x: number; y: number };
   end: { x: number; y: number };
   /** Altura da linha tracejada do piso da divisão atual; `null` se ficar fora do gráfico. */
   floorY: number | null;
@@ -131,6 +132,7 @@ export function buildLpChart(
     path,
     delta: last.value - valued[0].value,
     peak: { x: round(x(peak.point.recordedAt)), y: round(y(peak.value)), point: peak.point },
+    start: { x: 0, y: round(y(valued[0].value)) },
     end: { x: round(x(last.point.recordedAt)), y: round(y(last.value)) },
     floorY: floor !== null && floor > lo && floor < hi ? round(y(floor)) : null,
   };
