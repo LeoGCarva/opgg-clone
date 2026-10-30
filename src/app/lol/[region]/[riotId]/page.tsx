@@ -15,7 +15,7 @@ import { ddragonUrl, getStaticData } from "@/lib/ddragon";
 import { parseRiotIdSlug } from "@/lib/riot/riot-id";
 import { getPlayerChampionStats } from "@/lib/services/champion-stats";
 import { lpChangeByMatch } from "@/lib/services/lp-history";
-import { MATCHES_PAGE_SIZE, MAX_MATCHES_SHOWN } from "@/lib/services/profile";
+import { MATCHES_PAGE_SIZE, MAX_MATCHES_SHOWN, type QueueFilter } from "@/lib/services/profile";
 import { loadMoreAction } from "./actions";
 import { loadProfile, parseProfileRoute, RiotErrorBox } from "./shared";
 
@@ -57,8 +57,11 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
 
   const { profile, now } = result;
   const { account, leagues, lpHistory, matches } = profile;
-  const championStats = await getPlayerChampionStats(profile.puuids, { queue });
-  const championsHref = queue === "all" ? `${basePath}/champions` : `${basePath}/champions?queue=${queue}`;
+  // O card de campeões tem abas próprias: as três filas vêm de uma vez.
+  const [allStats, soloStats, flexStats] = await Promise.all(
+    (["all", "solo", "flex"] as const).map((q) => getPlayerChampionStats(profile.puuids, { queue: q })),
+  );
+  const championsHref = (q: QueueFilter) => (q === "all" ? `${basePath}/champions` : `${basePath}/champions?queue=${q}`);
   const lpChanges = lpChangeByMatch(
     lpHistory,
     matches.map((m) => ({ ...m, win: m.me.win })),
@@ -88,7 +91,12 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
             entry={leagues.find((l) => l.queueType === "RANKED_FLEX_SR")}
             history={lpHistory.RANKED_FLEX_SR}
           />
-          <ChampionSummary stats={championStats} data={data} href={championsHref} />
+          <ChampionSummary
+            stats={{ all: allStats, solo: soloStats, flex: flexStats }}
+            hrefs={{ all: championsHref("all"), solo: championsHref("solo"), flex: championsHref("flex") }}
+            initial={queue}
+            data={data}
+          />
         </aside>
 
         <section className="min-w-0 space-y-3">

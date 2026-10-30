@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { QueueFilter } from "@/lib/services/profile";
 
-const TABS: { value: QueueFilter; label: string }[] = [
+export const QUEUE_TABS: { value: QueueFilter; label: string }[] = [
   { value: "all", label: "Todas" },
   { value: "solo", label: "Solo/Duo" },
   { value: "flex", label: "Flex" },
@@ -10,7 +10,7 @@ const TABS: { value: QueueFilter; label: string }[] = [
 export function QueueTabs({ basePath, active }: { basePath: string; active: QueueFilter }) {
   return (
     <nav className="flex gap-1 border border-line bg-surface p-1 text-sm">
-      {TABS.map((tab) => (
+      {QUEUE_TABS.map((tab) => (
         <Link
           key={tab.value}
           href={tab.value === "all" ? basePath : `${basePath}?queue=${tab.value}`}
