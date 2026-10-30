@@ -30,9 +30,7 @@ export function ProfileSkeleton() {
         </div>
         <div className="min-w-0 space-y-3">
           <TabsSkeleton count={3} />
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
+          <MatchCardsSkeleton />
         </div>
       </div>
     </SkeletonRegion>
@@ -45,15 +43,43 @@ export function PlayerChampionsSkeleton() {
     <SkeletonRegion label="os campeões do jogador" className="space-y-6">
       <Skeleton className="h-8 w-64" />
       <TabsSkeleton count={3} />
-      <div className="border border-line bg-surface">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="flex items-center gap-4 border-t border-divider px-4 py-3 first:border-t-0">
-            <Skeleton className="size-9 shrink-0" />
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="ml-auto h-5 w-2/5" />
-          </div>
-        ))}
-      </div>
+      <ChampionRowsSkeleton />
+    </SkeletonRegion>
+  );
+}
+
+function MatchCardsSkeleton() {
+  return [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28" />);
+}
+
+function ChampionRowsSkeleton() {
+  return (
+    <div className="border border-line bg-surface">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="flex items-center gap-4 border-t border-divider px-4 py-3 first:border-t-0">
+          <Skeleton className="size-9 shrink-0" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="ml-auto h-5 w-2/5" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Lista de partidas enquanto a troca de fila carrega (abaixo das abas). */
+export function MatchListSkeleton() {
+  return (
+    <SkeletonRegion label="as partidas" className="space-y-3">
+      <MatchCardsSkeleton />
+    </SkeletonRegion>
+  );
+}
+
+/** Tabela de campeões enquanto a troca de fila carrega. */
+export function ChampionTableSkeleton() {
+  return (
+    <SkeletonRegion label="os campeões">
+      <ChampionRowsSkeleton />
     </SkeletonRegion>
   );
 }
