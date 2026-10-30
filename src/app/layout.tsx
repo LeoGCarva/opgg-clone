@@ -30,7 +30,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="pt-BR"
       className={`${archivo.variable} ${instrumentSans.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-canvas font-sans text-ink">
+      {/* Extensões (Grammarly etc.) injetam atributos no body antes da hidratação. */}
+      <body
+        suppressHydrationWarning
+        className="flex min-h-full flex-col bg-canvas font-sans text-ink"
+      >
         <header className="bg-ink text-white">
           <div className="mx-auto flex min-h-16 w-full max-w-[1240px] flex-wrap items-center gap-x-8 gap-y-2 px-6">
             <Link
