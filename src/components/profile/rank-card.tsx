@@ -18,9 +18,72 @@ const TIER_COLORS: Record<string, string> = {
   CHALLENGER: "text-elo-challenger",
 };
 
-export function RankCard({ title, entry, history = [] }: { title: string; entry?: LeagueEntry; history?: LpPoint[] }) {
+/**
+ * Card de elo de uma fila. Com `collapsible` (Flex) começa recolhido mostrando só ícone, elo e PDL,
+ * como no DPM.lol; o resto (V/D, % e gráfico) abre num `<details>` — sem JS no cliente.
+ */
+export function RankCard({
+  title,
+  entry,
+  history = [],
+  collapsible = false,
+}: {
+  title: string;
+  entry?: LeagueEntry;
+  history?: LpPoint[];
+  collapsible?: boolean;
+}) {
   const games = entry ? entry.wins + entry.losses : 0;
-  const wr = entry ? winRate(entry.wins, entry.losses) : 0;
+
+  if (collapsible) {
+    if (!entry) {
+      // Nada para abrir: uma linha só, da mesma altura do card recolhido.
+      return (
+        <section className="flex items-center gap-3 border border-line bg-surface px-[18px] py-3">
+          <TierIcon tier={null} size={32} className="opacity-60" />
+          <div>
+            <h2 className="font-sans text-xs font-bold text-muted">{title}</h2>
+            <p className="text-sm text-muted">Unranked</p>
+          </div>
+        </section>
+      );
+    }
+    return (
+      <details className="group border border-line bg-surface">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-[18px] py-3 hover:bg-canvas [&::-webkit-details-marker]:hidden">
+          <TierIcon tier={entry.tier} size={32} />
+          <div className="min-w-0 flex-1">
+            <h2 className="font-sans text-xs font-bold text-muted">{title}</h2>
+            <p className="flex items-baseline gap-1.5 text-sm">
+              <span className={`truncate font-display font-extrabold ${TIER_COLORS[entry.tier] ?? ""}`}>
+                {tierLabel(entry.tier, entry.rank)}
+              </span>
+              <span className="whitespace-nowrap text-muted">· {entry.leaguePoints} PDL</span>
+            </p>
+          </div>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="shrink-0 text-muted transition-transform group-open:rotate-180 motion-reduce:transition-none"
+          >
+            <path d="M6 9 L12 15 L18 9" />
+          </svg>
+        </summary>
+        <div className="border-t border-divider">
+          <p className="px-[18px] pt-3 text-right text-[13px] text-muted">{games} jogos</p>
+          <RankBody entry={entry} history={history} />
+        </div>
+      </details>
+    );
+  }
+
   return (
     <section className="border border-line bg-surface">
       <div className="flex items-center justify-between gap-3 border-b border-divider px-[18px] py-3">
@@ -28,27 +91,7 @@ export function RankCard({ title, entry, history = [] }: { title: string; entry?
         {entry && <span className="text-[13px] text-muted">{games} jogos</span>}
       </div>
       {entry ? (
-        <>
-          {/* Cartão estreito: as estatísticas descem para a linha de baixo quando não cabem ao lado. */}
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-[18px]">
-            <div className="flex items-center gap-3">
-              <TierIcon tier={entry.tier} size={44} />
-              <div>
-                <p className={`font-display text-[22px] leading-tight font-extrabold [font-stretch:112%] ${TIER_COLORS[entry.tier] ?? ""}`}>
-                  {tierLabel(entry.tier, entry.rank)}
-                </p>
-                <p className="text-sm text-muted">{entry.leaguePoints} PDL</p>
-              </div>
-            </div>
-            <div className="ml-auto text-right whitespace-nowrap">
-              <p className="text-[13px] text-muted">
-                {entry.wins}V {entry.losses}D
-              </p>
-              <p className={`font-display text-[17px] font-extrabold ${winRateClass(wr)}`}>{wr}%</p>
-            </div>
-          </div>
-          <LpChartSection entry={entry} history={history} />
-        </>
+        <RankBody entry={entry} history={history} />
       ) : (
         <p className="flex items-center gap-3 p-[18px] text-muted">
           <TierIcon tier={null} size={40} className="opacity-60" />
@@ -56,6 +99,34 @@ export function RankCard({ title, entry, history = [] }: { title: string; entry?
         </p>
       )}
     </section>
+  );
+}
+
+/** Elo, PDL, V/D, % e o gráfico — o corpo do card (aberto ou expandido). */
+function RankBody({ entry, history }: { entry: LeagueEntry; history: LpPoint[] }) {
+  const wr = winRate(entry.wins, entry.losses);
+  return (
+    <>
+      {/* Cartão estreito: as estatísticas descem para a linha de baixo quando não cabem ao lado. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-[18px]">
+        <div className="flex items-center gap-3">
+          <TierIcon tier={entry.tier} size={44} />
+          <div>
+            <p className={`font-display text-[22px] leading-tight font-extrabold [font-stretch:112%] ${TIER_COLORS[entry.tier] ?? ""}`}>
+              {tierLabel(entry.tier, entry.rank)}
+            </p>
+            <p className="text-sm text-muted">{entry.leaguePoints} PDL</p>
+          </div>
+        </div>
+        <div className="ml-auto text-right whitespace-nowrap">
+          <p className="text-[13px] text-muted">
+            {entry.wins}V {entry.losses}D
+          </p>
+          <p className={`font-display text-[17px] font-extrabold ${winRateClass(wr)}`}>{wr}%</p>
+        </div>
+      </div>
+      <LpChartSection entry={entry} history={history} />
+    </>
   );
 }
 

@@ -90,6 +90,7 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
             title="Ranqueada Flex"
             entry={leagues.find((l) => l.queueType === "RANKED_FLEX_SR")}
             history={lpHistory.RANKED_FLEX_SR}
+            collapsible
           />
           <ChampionSummary
             stats={{ all: allStats, solo: soloStats, flex: flexStats }}
