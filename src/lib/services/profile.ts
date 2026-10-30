@@ -10,6 +10,8 @@ import { matchToRows } from "./match-mapper";
 import { saveMatches } from "./match-store";
 
 export const REFRESH_COOLDOWN_MS = 120_000;
+// Ao abrir um perfil, atualiza sozinho se a última atualização passou disso (deixa as fotos de PDL mais densas).
+export const AUTO_REFRESH_AFTER_MS = 10 * 60_000;
 export const MATCHES_PAGE_SIZE = 20;
 export const MAX_MATCHES_SHOWN = 100;
 
@@ -142,7 +144,7 @@ export async function refreshProfile(platform: Platform, target: RefreshTarget) 
   });
 
   const newMatches = await storeMatches(platform, matchIds);
-  return { puuid, newMatches };
+  return { puuid, newMatches, riotId: { gameName: accountRow.gameName, tagLine: accountRow.tagLine } };
 }
 
 /** Baixa a próxima página de partidas mais antigas que a mais antiga já salva (na fila filtrada). */
@@ -252,10 +254,11 @@ export async function getProfile(
   return { account, puuids, leagues, lpHistory: lpHistoryByQueue, matches: profileMatches };
 }
 
-export async function getLastRefreshedAt(puuid: string): Promise<Date | null> {
+/** Riot ID e hora do último refresh salvos (para o cooldown e para saber se o nome mudou). */
+export async function getStoredAccount(puuid: string) {
   const [row] = await db()
-    .select({ lastRefreshedAt: accounts.lastRefreshedAt })
+    .select({ gameName: accounts.gameName, tagLine: accounts.tagLine, lastRefreshedAt: accounts.lastRefreshedAt })
     .from(accounts)
     .where(eq(accounts.puuid, puuid));
-  return row?.lastRefreshedAt ?? null;
+  return row ?? null;
 }

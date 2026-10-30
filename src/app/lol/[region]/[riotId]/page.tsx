@@ -14,6 +14,7 @@ import { RememberSearch } from "@/components/remember-search";
 import { ddragonUrl, getStaticData } from "@/lib/ddragon";
 import { parseRiotIdSlug } from "@/lib/riot/riot-id";
 import { getPlayerChampionStats } from "@/lib/services/champion-stats";
+import { lpChangeByMatch } from "@/lib/services/lp-history";
 import { MATCHES_PAGE_SIZE, MAX_MATCHES_SHOWN } from "@/lib/services/profile";
 import { loadMoreAction } from "./actions";
 import { loadProfile, parseProfileRoute, RiotErrorBox } from "./shared";
@@ -58,6 +59,10 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
   const { account, leagues, lpHistory, matches } = profile;
   const championStats = await getPlayerChampionStats(profile.puuids, { queue });
   const championsHref = queue === "all" ? `${basePath}/champions` : `${basePath}/champions?queue=${queue}`;
+  const lpChanges = lpChangeByMatch(
+    lpHistory,
+    matches.map((m) => ({ ...m, win: m.me.win })),
+  );
   // Se veio a página cheia, pode haver mais partidas (no banco ou na Riot).
   const canLoadMore = matches.length >= limit && limit < MAX_MATCHES_SHOWN;
 
@@ -93,7 +98,14 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
               <div key={day.key} className="space-y-2">
                 <MatchDayHeader label={day.label} matches={day.items} />
                 {day.items.map((m) => (
-                  <MatchCard key={m.matchId} match={m} data={data} region={route.region} now={now} />
+                  <MatchCard
+                    key={m.matchId}
+                    match={m}
+                    data={data}
+                    region={route.region}
+                    now={now}
+                    lpChange={lpChanges.get(m.matchId)}
+                  />
                 ))}
               </div>
             ))

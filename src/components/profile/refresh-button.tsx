@@ -1,14 +1,24 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState, useEffect, useRef } from "react";
 import type { RefreshState } from "@/app/lol/[region]/[riotId]/actions";
 
 type Props = {
   action: (prev: RefreshState, formData: FormData) => Promise<RefreshState>;
+  /** Dispara uma atualização ao montar (perfil desatualizado). O servidor confere o cooldown de novo. */
+  auto?: boolean;
 };
 
-export function RefreshButton({ action }: Props) {
+export function RefreshButton({ action, auto = false }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  // Evita disparar duas vezes no Strict Mode (efeitos rodam 2x em dev).
+  const fired = useRef(false);
+
+  useEffect(() => {
+    if (!auto || fired.current) return;
+    fired.current = true;
+    startTransition(() => formAction(new FormData()));
+  }, [auto, formAction]);
 
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-3">

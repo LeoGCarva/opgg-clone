@@ -11,6 +11,8 @@ type Props = {
   data: StaticData;
   region: RegionSlug;
   now: number;
+  /** PDL ganho/perdido, quando dá para saber com certeza (`lpChangeByMatch`). */
+  lpChange?: number;
 };
 
 // Partidas com menos de ~3,5 min terminam em "remake" e não contam vitória/derrota.
@@ -36,7 +38,7 @@ export function MatchDayHeader({ label, matches }: { label: string; matches: Pro
   );
 }
 
-export function MatchCard({ match, data, region, now }: Props) {
+export function MatchCard({ match, data, region, now, lpChange }: Props) {
   const { me } = match;
   const v = data.version;
   const remake = match.gameDuration < REMAKE_MAX_SECONDS;
@@ -60,6 +62,12 @@ export function MatchCard({ match, data, region, now }: Props) {
         <span className={me.win && !remake ? "font-semibold text-win" : remake ? "text-muted" : "text-loss"}>
           {outcome}
         </span>
+        {lpChange !== undefined && (
+          <span className={`font-semibold ${lpChange >= 0 ? "text-win" : "text-loss"}`}>
+            {lpChange >= 0 ? "+" : "−"}
+            {Math.abs(lpChange)} PDL
+          </span>
+        )}
         <span className="text-muted">{formatDuration(match.gameDuration)}</span>
       </div>
 

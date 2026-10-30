@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseRiotId, parseRiotIdSlug, toRiotIdSlug } from "@/lib/riot/riot-id";
+import { PLATFORMS, platformFromSlug, slugFromPlatform } from "@/lib/riot/routing";
 
 describe("parseRiotId", () => {
   it("separa nome e tag", () => {
@@ -33,5 +34,12 @@ describe("slug da URL", () => {
       gameName: "Nome-Com-Hifen",
       tagLine: "BR1",
     });
+  });
+});
+
+describe("slugFromPlatform", () => {
+  it("é o inverso de platformFromSlug para todas as plataformas", () => {
+    for (const platform of PLATFORMS) expect(platformFromSlug(slugFromPlatform(platform))).toBe(platform);
+    expect(slugFromPlatform("br1")).toBe("br");
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLpChart, divisionFloor, ladderValue, shouldRecord, type LpPoint } from "@/lib/services/lp-history";
+import { buildLpChart, divisionFloor, ladderValue, lpChangeByMatch, shouldRecord, type LpMatch, type LpPoint } from "@/lib/services/lp-history";
 
 function point(day: number, tier: string, rank: string, leaguePoints: number, extra: Partial<LpPoint> = {}): LpPoint {
   return { tier, rank, leaguePoints, wins: 10, losses: 10, recordedAt: new Date(Date.UTC(2026, 9, day)), ...extra };
@@ -73,5 +73,57 @@ describe("buildLpChart", () => {
 
   it("ignora fotos com tier desconhecido", () => {
     expect(buildLpChart([point(1, "WOOD", "I", 0), point(2, "GOLD", "II", 10)], size)).toBeNull();
+  });
+});
+
+describe("lpChangeByMatch", () => {
+  // Fotos às 12h dos dias 1, 2, 3...; partidas de 30 min terminando no meio do intervalo.
+  const snap = (day: number, tier: string, rank: string, lp: number, wins: number, losses: number): LpPoint => ({
+    tier, rank, leaguePoints: lp, wins, losses, recordedAt: new Date(Date.UTC(2026, 9, day, 12)),
+  });
+  const game = (matchId: string, day: number, win: boolean, queueId = 420): LpMatch => ({
+    matchId, queueId, win, gameCreation: new Date(Date.UTC(2026, 9, day, 20)), gameDuration: 1800,
+  });
+
+  it("dá o PDL exato quando há 1 jogo entre duas fotos", () => {
+    const history = { RANKED_SOLO_5x5: [snap(1, "GOLD", "II", 40, 10, 10), snap(2, "GOLD", "II", 62, 11, 10), snap(3, "GOLD", "II", 44, 11, 11)] };
+    const changes = lpChangeByMatch(history, [game("win", 1, true), game("loss", 2, false)]);
+    expect(Object.fromEntries(changes)).toEqual({ win: 22, loss: -18 });
+  });
+
+  it("conta subida de divisão e de tier", () => {
+    const history = {
+      RANKED_SOLO_5x5: [snap(1, "GOLD", "III", 90, 10, 10), snap(2, "GOLD", "II", 10, 11, 10)],
+      RANKED_FLEX_SR: [snap(1, "DIAMOND", "I", 85, 5, 5), snap(2, "MASTER", "I", 3, 6, 5)],
+    };
+    const changes = lpChangeByMatch(history, [game("a", 1, true), game("b", 1, true, 440)]);
+    expect(Object.fromEntries(changes)).toEqual({ a: 20, b: 18 });
+  });
+
+  it("não mostra nada com vários jogos entre as fotos", () => {
+    const history = { RANKED_SOLO_5x5: [snap(1, "GOLD", "II", 40, 10, 10), snap(2, "GOLD", "II", 50, 12, 11)] };
+    expect(lpChangeByMatch(history, [game("a", 1, true)]).size).toBe(0);
+  });
+
+  it("não mostra nada se houver 2 partidas salvas no intervalo", () => {
+    const history = { RANKED_SOLO_5x5: [snap(1, "GOLD", "II", 40, 10, 10), snap(2, "GOLD", "II", 62, 11, 10)] };
+    const second = { ...game("b", 1, true), gameCreation: new Date(Date.UTC(2026, 9, 1, 14)) };
+    expect(lpChangeByMatch(history, [game("a", 1, true), second]).size).toBe(0);
+  });
+
+  it("não mostra nada se o resultado da partida não bate com o V/D", () => {
+    const history = { RANKED_SOLO_5x5: [snap(1, "GOLD", "II", 40, 10, 10), snap(2, "GOLD", "II", 62, 11, 10)] };
+    expect(lpChangeByMatch(history, [game("a", 1, false)]).size).toBe(0);
+  });
+
+  it("descarta variações impossíveis para um jogo", () => {
+    // Caso real: Mestre 99 → 161 com 1 vitória entre fotos de 2 dias.
+    const history = { RANKED_SOLO_5x5: [snap(1, "MASTER", "I", 99, 74, 62), snap(2, "MASTER", "I", 161, 75, 62)] };
+    expect(lpChangeByMatch(history, [game("a", 1, true)]).size).toBe(0);
+  });
+
+  it("ignora partidas fora do intervalo e de outra fila", () => {
+    const history = { RANKED_SOLO_5x5: [snap(1, "GOLD", "II", 40, 10, 10), snap(2, "GOLD", "II", 62, 11, 10)] };
+    expect(lpChangeByMatch(history, [game("depois", 2, true), game("flex", 1, true, 440)]).size).toBe(0);
   });
 });
