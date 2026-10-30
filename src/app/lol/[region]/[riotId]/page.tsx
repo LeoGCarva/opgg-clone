@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { ProfileSkeleton } from "@/components/profile/profile-skeleton";
+import { MatchListSkeleton, ProfileSkeleton } from "@/components/profile/profile-skeleton";
 import { ChampionSummary } from "@/components/profile/champion-summary";
 import { groupByDay } from "@/components/profile/format";
 import { LoadMoreButton } from "@/components/profile/load-more-button";
 import { MatchCard, MatchDayHeader } from "@/components/profile/match-card";
 import { ProfileHeader } from "@/components/profile/profile-header";
-import { QueueTabs } from "@/components/profile/queue-tabs";
+import { QueueTabs, QueueTabsContent, QueueTabsProvider } from "@/components/profile/queue-tabs";
 import { RankCard } from "@/components/profile/rank-card";
 import { RememberSearch } from "@/components/remember-search";
 import { ddragonUrl, getStaticData } from "@/lib/ddragon";
@@ -101,33 +101,37 @@ async function ProfileContent({ params, searchParams }: Pick<Props, "params" | "
         </aside>
 
         <section className="min-w-0 space-y-3">
-          <QueueTabs basePath={basePath} active={queue} />
-          {matches.length ? (
-            groupByDay(matches, (m) => m.gameCreation, now).map((day) => (
-              <div key={day.key} className="space-y-2">
-                <MatchDayHeader label={day.label} matches={day.items} />
-                {day.items.map((m) => (
-                  <MatchCard
-                    key={m.matchId}
-                    match={m}
-                    data={data}
-                    region={route.region}
-                    now={now}
-                    lpChange={lpChanges.get(m.matchId)}
-                  />
-                ))}
-              </div>
-            ))
-          ) : (
-            <p className="border border-line p-6 text-center text-muted">
-              Nenhuma partida nessa fila entre as últimas salvas.
-            </p>
-          )}
-          {canLoadMore && (
-            <LoadMoreButton
-              action={loadMoreAction.bind(null, platform, account.puuid, basePath, queue, limit)}
-            />
-          )}
+          <QueueTabsProvider>
+            <QueueTabs basePath={basePath} active={queue} />
+            <QueueTabsContent fallback={<MatchListSkeleton />}>
+              {matches.length ? (
+                groupByDay(matches, (m) => m.gameCreation, now).map((day) => (
+                  <div key={day.key} className="space-y-2">
+                    <MatchDayHeader label={day.label} matches={day.items} />
+                    {day.items.map((m) => (
+                      <MatchCard
+                        key={m.matchId}
+                        match={m}
+                        data={data}
+                        region={route.region}
+                        now={now}
+                        lpChange={lpChanges.get(m.matchId)}
+                      />
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <p className="border border-line p-6 text-center text-muted">
+                  Nenhuma partida nessa fila entre as últimas salvas.
+                </p>
+              )}
+              {canLoadMore && (
+                <LoadMoreButton
+                  action={loadMoreAction.bind(null, platform, account.puuid, basePath, queue, limit)}
+                />
+              )}
+            </QueueTabsContent>
+          </QueueTabsProvider>
         </section>
       </div>
 

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { PlayerChampionsSkeleton } from "@/components/profile/profile-skeleton";
+import { ChampionTableSkeleton, PlayerChampionsSkeleton } from "@/components/profile/profile-skeleton";
 import { ChampionTable } from "@/components/profile/champion-table";
-import { QueueTabs } from "@/components/profile/queue-tabs";
+import { QueueTabs, QueueTabsContent, QueueTabsProvider } from "@/components/profile/queue-tabs";
 import { getStaticData } from "@/lib/ddragon";
 import { parseRiotIdSlug } from "@/lib/riot/riot-id";
 import { getPlayerChampionBuilds, getPlayerChampionStats } from "@/lib/services/champion-stats";
@@ -51,24 +51,27 @@ async function ChampionsContent({ params, searchParams }: Pick<Props, "params" |
         <h1 className="text-2xl font-bold">Campeões</h1>
       </header>
 
-      <QueueTabs basePath={`${basePath}/champions`} active={queue} />
+      <QueueTabsProvider>
+        <QueueTabs basePath={`${basePath}/champions`} active={queue} />
+        <QueueTabsContent fallback={<ChampionTableSkeleton />}>
+          {stats.length ? (
+            <ChampionTable stats={stats} builds={builds} data={data} />
+          ) : (
+            <p className="border border-line p-6 text-center text-muted">
+              Nenhuma partida nessa fila.
+            </p>
+          )}
 
-      {stats.length ? (
-        <ChampionTable stats={stats} builds={builds} data={data} />
-      ) : (
-        <p className="border border-line p-6 text-center text-muted">
-          Nenhuma partida nessa fila.
-        </p>
-      )}
-
-      <p className="text-center text-xs text-muted">
-        Baseado em {totalGames} partida{totalGames === 1 ? "" : "s"} salva{totalGames === 1 ? "" : "s"}
-        {queue === "all" && " (sem Arena e remakes)"}. Use &ldquo;Carregar mais&rdquo; no{" "}
-        <Link href={basePath} className="text-link hover:underline">
-          perfil
-        </Link>{" "}
-        para incluir partidas mais antigas.
-      </p>
+          <p className="text-center text-xs text-muted">
+            Baseado em {totalGames} partida{totalGames === 1 ? "" : "s"} salva{totalGames === 1 ? "" : "s"}
+            {queue === "all" && " (sem Arena e remakes)"}. Use &ldquo;Carregar mais&rdquo; no{" "}
+            <Link href={basePath} className="text-link hover:underline">
+              perfil
+            </Link>{" "}
+            para incluir partidas mais antigas.
+          </p>
+        </QueueTabsContent>
+      </QueueTabsProvider>
     </div>
   );
 }
